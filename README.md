@@ -4,62 +4,65 @@
   
 </p>
 
-<h1 align="center">Clean CaDET</h1>
+<h1 align="center">DataSet Explorer</h1>
 <div align="center">
 
-  [![CodeFactor](https://www.codefactor.io/repository/github/clean-cadet/platform/badge)](https://www.codefactor.io/repository/github/clean-cadet/platform)
+  [![CodeFactor](https://www.codefactor.io/repository/github/clean-cadet/dataset-explorer/badge)](https://www.codefactor.io/repository/github/clean-cadet/dataset-explorer)
   [![Gitter](https://badges.gitter.im/Clean-CaDET/community.svg)](https://gitter.im/Clean-CaDET/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 </div>
 
 <p align="justify">
-  The Clean Code and Design Educational Tool (Clean CaDET) is a platform dedicated to the study of clean code. It presents a conglomerate of AI-powered tools for educators, learners, practitioners, and researchers studying clean code.
+  The DataSet Explorer (DSE) tool supports annotators during the code smell annotation procedure.
   </p>
 <p align="justify">
-  Clean CaDET started as a project funded by the <a href="http://fondzanauku.gov.rs/?lang=en">Science Fund of the Republic of Serbia</a>. It hopes to grow into an active open-source community dedicated to software engineers' growth and their pursuit to build sustainable, high-quality software.
+  DSE tool development started as a part of the Clean CaDET project which was funded by the <a href="http://fondzanauku.gov.rs/?lang=en">Science Fund of the Republic of Serbia</a>.
 </p>
 
 - [Introduction](#introduction)
   - [What is the problem?](#what-is-the-problem)
   - [Who is it for?](#who-is-it-for)
-- [Get started](https://github.com/Clean-CaDET/platform/blob/master/SETUP.md)
+- [Get started](https://github.com/Clean-CaDET/dataset-explorer/blob/master/SETUP.md)
 - [Team](#team)
 
 # Introduction
-The vision and high-level idea behind Clean CaDET is described in the [overview video](https://www.youtube.com/watch?v=fBENFfjC49A). 
+
+We outline notable resources that can assist researchers in using our implementation:
+<ul>
+  <li>Back-end source code (A repository hosting the source code of the DSE server application) -	https://github.com/Clean-CaDET/dataset-explorer </li>
+  <li>Front-end source code	(A repository hosting the source code of the web UI) -https://github.com/Clean-CaDET/platform-explorer-ui-web </li>
+  <li>General documentation	(A collection of wiki pages explaining our DSE design and supported features) -	https://github.com/Clean-CaDET/dataset-explorer/wiki </li>
+</ul>
+
+
 
 ## What is the problem?
 <p align="justify">
-  There is a lot of flexibility when crafting software solutions, especially those at a higher level of abstraction. Software engineers have a vast pool of tools and technologies to choose from when assembling contemporary software. This flexibility has an interesting consequence – a requirement can be fulfilled by a near-infinite set of different code configurations. Even when limited to a single programming language and a simple requirement, it is easy to list many code samples that fulfill the requirement using different coding styles and language features.
+  DSE tool domain model corresponds to the conceptual model, ensuring that the tool’s implementation reflects the underlying conceptual model. The tool provides the analysis of code properties relevant to the several code smells, such as text(source code), structural metrics and relationships between system components.
 </p>
 <p align="justify">
-  While many code solutions can fulfill a requirement, not all of them are acceptable. Some solutions cause subtle bugs, performance loss, or expose security vulnerabilities. Furthermore, many of the possible solutions present another severe but less obvious problem in the form of code smells. Code suffering from sever code smells is hard to understand and modify. Such code harms the software’s maintainability, evolvability, reliability, and testability, introducing technical debt. Unfortunately, removing code smells is not easy, as many code smell definitions are vague and lack a concrete heuristic that can unambiguously determine the smell’s presence.
+  
 </p>
 
 ## Who is it for?
 
-### Practitioners
-<p align="justify">
-Through its primary feature set, Clean CaDET detects code smells through AI models. It then offers personalized suggestions to the user in the form of educational content to help them resolve the identified issues. It acts as a digital assistant for software engineering practitioners, which integrates into their development environment to analyze their code.
-<ul>
-  <li>For more details regarding the <b>code quality analysis</b> workflow, useful for <i>practitioners</i>, check out the <a href="https://github.com/Clean-CaDET/platform/wiki" target="_blank">wiki pages</a>.</li>
-</ul>
-</p>
-
-### Learners and educators
-<p align="justify">
-A significant module of Clean CaDET is its <b>Tutor</b>. It hosts the learner's model, a collection of learning objects, and instructional rules that select the most appropriate educational content for the particular learner. This functionality is integrated into the code quality analysis workflow, and it can be accessed as a standalone educational tool. By directly interacting with the <b>Tutor</b>, learners can explore various clean code topics and engage with the challenge subsystem to learn how to refactor and analyze code quality in a gamified environment.
-<ul>
-  <li>For more details regarding the <b>Tutor</b> module, useful for <i>learners and educators</i>, check out the <a href="https://github.com/Clean-CaDET/tutor#readme" target="_blank">module's page</a>.</li>
-</ul>
-</p>
-
 ### Researchers
 <p align="justify">
-While developing AI algorithms for code smell detection, we processed existing datasets and built <a href="https://www.techrxiv.org/articles/preprint/Towards_a_systematic_approach_to_manual_annotation_of_code_smells/14159183" target="_blank">our own</a>. To automate the process of dataset construction and analysis, we developed the <b>Dataset Explorer</b> tool.
-<ul>
-  <li>For more details regarding the <b>Dataset Explorer</b> module, useful for <i>researchers</i>, check out the <a href="https://github.com/Clean-CaDET/platform/wiki/Module-Dataset-Explorer" target="_blank">module's page</a></li>
-</ul>
+To automate the process of dataset construction and analysis, we developed the <b>Dataset Explorer</b> tool.
+
+The DSE tool supports the annotators during the training phase, enabling them to analyze the annotation schema within the tool, access the guidelines, perform POC annotation, and discuss disagreements on conflicting code snippets.
+
+The DSE tool supports the annotators during the annotation phase, allowing simultaneous annotation of code snippets, checking if each code snippet is annotated by at least two annotators, and aggregating single labels assigned by multiple annotators to form the final label.
+
+The DSE tool supported the resolution of the disagreements in the annotation phase by assigning conflicting code snippets to annotators that did not previously label them. In the discussion phase, the DSE tool identified conflicting code snippets that must be discussed and resolved.
+
+The DSE tool enabled the removal of trivial code snippets based on the values of structural metrics. Removing trivial code snippets ensured that annotators were focused on code snippets that required deeper analysis. Next, the tool enabled the annotators to analyze various code properties: text (source code), structural metrics, and relationships between system components. Visualization of relationships between system components was realized as graphs: nodes representing components and edges representing their relationships (method invocation, inheritance, etc.). Presenting various code properties and heuristics helped annotators streamline their work. It eliminated the need for annotators to manually create their checklists or constantly refer to external resources, saving time and effort. 
+
+DSE tool supports random sampling, allowing annotators to choose the number of code snippets that should be randomly extracted from the software project.
+
+DSE tool allowed annotators to define the annotation schema. DSE tool supported annotators in analyzing relevant code properties.
+
+For more details regarding the <b>Dataset Explorer</b>, check out the <a href="https://github.com/Clean-CaDET/platform/wiki/Module-Dataset-Explorer" target="_blank">module's page</a>
 </p>
 
 # Team
