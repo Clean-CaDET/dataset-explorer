@@ -34,7 +34,7 @@ namespace DataSetExplorer.Core.DataSets
             _instanceFilter = instanceFilter;
             _projectAndCommitUrl = projectAndCommitUrl;
             _projectName = projectName;
-            _cadetProject = new CodeModelFactory(language).CreateProjectWithCodeFileLinks(projectPath, ignoredFolders);
+            _cadetProject = new CodeModelFactory(true).CreateProjectWithCodeFileLinks(projectPath, ignoredFolders);
             _includeClasses = includeClasses;
             _includeMembers = includeMembers;
             _codeSmells = codeSmells;
