@@ -62,7 +62,7 @@ DSE tool supports random sampling, allowing annotators to choose the number of c
 
 DSE tool allowed annotators to define the annotation schema. DSE tool supported annotators in analyzing relevant code properties.
 
-For more details regarding the <b>Dataset Explorer</b>, check out the <a href="https://github.com/Clean-CaDET/platform/wiki/Module-Dataset-Explorer" target="_blank">module's page</a>
+For more details regarding the <b>Dataset Explorer</b>, check out the <a href="https://github.com/Clean-CaDET/dataset-explorer/wiki/Module-Dataset-Explorer" target="_blank">module's page</a>
 </p>
 
 # Team
