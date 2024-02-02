@@ -19,51 +19,38 @@
   DSE tool development started as a part of the Clean CaDET project which was funded by the <a href="http://fondzanauku.gov.rs/?lang=en">Science Fund of the Republic of Serbia</a>.
 </p>
 
-- [Introduction](#introduction)
-  - [What is the problem?](#what-is-the-problem)
-  - [Who is it for?](#who-is-it-for)
-- [Get started](https://github.com/Clean-CaDET/dataset-explorer/blob/master/SETUP.md)
+- [Motivation](#motivation)
+- [Who is it for?](#who-is-it-for)
+- [Get started](#get-started)
+- [Useful resources](#useful-resources)
 - [Team](#team)
 
-# Introduction
+# Motivation
+<p align="justify">
+Maintainability is an aspect of software quality that refers to the ease with which software can be modified to correct faults, improve performance, or adjust to a new environment. Software maintainability can be negatively impacted by code smells, which are structures in code that indicate issues in software design or implementation. Software engineering experts agree that detecting and removing harmful code smells is important for high-quality code. Machine learning (ML) models could be used to detect code smells, but the models must be trained on high-quality datasets to be accurate and useful to software engineers. 
+</p>
+<p align="justify">
+  Datasets created automatically using heuristic-based tools can result in false positives and false negatives. Semi-automated approaches require experts to validate annotations made by tool, but these datasets may still contain false negatives. On the other hand, fully manual approach is challenging. Inconsistent annotations, small size, non-realistic smell-to-non-smell ratio, and poor smell coverage hinder the dataset quality. These issues arise mainly due to the time-consuming nature of manual annotation and annotators' disagreements caused by ambiguous and vague smell definitions.
+</p>
+<p align="justify">
+  To speed up and ease the manual code smell annotation, we developed the DataSet Explorer (DSE) tool. This tool supports annotators during the annotation procedure by providing various functionalities described in detail <a href="https://github.com/Clean-CaDET/dataset-explorer/wiki/Module-Dataset-Explorer" target="_blank">here</a>.
+</p>
 
+# Who is it for?
+<p align="justify">
+  The DSE tool can be used by annotators and ML researchers aiming to build high-quality datasets which can be used to train ML code smell detection models.
+</p>
+
+# Get started
+Set up and get started with DSE tool by following these <a href="https://github.com/Clean-CaDET/dataset-explorer/blob/master/SETUP.md" target="_blank">instructions</a>.
+
+# Useful resources
 We outline notable resources that can assist researchers in using our implementation:
 <ul>
-  <li>Back-end source code (A repository hosting the source code of the DSE server application) -	https://github.com/Clean-CaDET/dataset-explorer </li>
-  <li>Front-end source code	(A repository hosting the source code of the web UI) -https://github.com/Clean-CaDET/platform-explorer-ui-web </li>
-  <li>General documentation	(A collection of wiki pages explaining our DSE design and supported features) -	https://github.com/Clean-CaDET/dataset-explorer/wiki </li>
+  <li><a href="https://github.com/Clean-CaDET/dataset-explorer" target="_blank">Back-end source code</a> - A repository hosting the source code of the DSE server application</li>
+  <li><a href="https://github.com/Clean-CaDET/platform-explorer-ui-web" target="_blank">Front-end source code</a> - A repository hosting the source code of the web UI</li>
+  <li><a href="https://github.com/Clean-CaDET/dataset-explorer/wiki" target="_blank">General documentation</a> - Wiki pages explaining our DSE design and supported features</li>
 </ul>
-
-
-
-## What is the problem?
-<p align="justify">
-  DSE tool domain model corresponds to the conceptual model, ensuring that the tool’s implementation reflects the underlying conceptual model. The tool provides the analysis of code properties relevant to the several code smells, such as text(source code), structural metrics and relationships between system components.
-</p>
-<p align="justify">
-  
-</p>
-
-## Who is it for?
-
-### Researchers
-<p align="justify">
-To automate the process of dataset construction and analysis, we developed the <b>Dataset Explorer</b> tool.
-
-The DSE tool supports the annotators during the training phase, enabling them to analyze the annotation schema within the tool, access the guidelines, perform POC annotation, and discuss disagreements on conflicting code snippets.
-
-The DSE tool supports the annotators during the annotation phase, allowing simultaneous annotation of code snippets, checking if each code snippet is annotated by at least two annotators, and aggregating single labels assigned by multiple annotators to form the final label.
-
-The DSE tool supported the resolution of the disagreements in the annotation phase by assigning conflicting code snippets to annotators that did not previously label them. In the discussion phase, the DSE tool identified conflicting code snippets that must be discussed and resolved.
-
-The DSE tool enabled the removal of trivial code snippets based on the values of structural metrics. Removing trivial code snippets ensured that annotators were focused on code snippets that required deeper analysis. Next, the tool enabled the annotators to analyze various code properties: text (source code), structural metrics, and relationships between system components. Visualization of relationships between system components was realized as graphs: nodes representing components and edges representing their relationships (method invocation, inheritance, etc.). Presenting various code properties and heuristics helped annotators streamline their work. It eliminated the need for annotators to manually create their checklists or constantly refer to external resources, saving time and effort. 
-
-DSE tool supports random sampling, allowing annotators to choose the number of code snippets that should be randomly extracted from the software project.
-
-DSE tool allowed annotators to define the annotation schema. DSE tool supported annotators in analyzing relevant code properties.
-
-For more details regarding the <b>Dataset Explorer</b>, check out the <a href="https://github.com/Clean-CaDET/dataset-explorer/wiki/Module-Dataset-Explorer" target="_blank">module's page</a>
-</p>
 
 # Team
 <p align="justify">
