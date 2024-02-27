@@ -72,9 +72,18 @@ namespace DataSetExplorer.Core.DataSets
                 foreach (var importedInstance in importedCandidate.Instances)
                 {
                     var instance = candidate.Instances.Find(x => x.Link.Equals(importedInstance.Link));
-                    importedInstance.Annotations.ToList().ForEach(a => instance.AddAnnotation(a));
+                    foreach (var existingAnnotation in instance.Annotations)
+                    {
+                        if (AnnotationExists(importedInstance, existingAnnotation)) return;
+                    }
+                    instance.AddAnnotation(importedInstance.Annotations.First());
                 }
             }
+        }
+
+        private static bool AnnotationExists(Instance importedInstance, Annotation existingAnnotation)
+        {
+            return existingAnnotation.Annotator.Id == importedInstance.Annotations.First().Annotator.Id;
         }
 
         private static void AddInstancesToCandidates(List<SmellCandidateInstances> allAnnotatedInstances, List<SmellCandidateInstances> annotatedInstances)

@@ -214,7 +214,7 @@ namespace DataSetExplorer.Core.DataSetSerializer
                     _sheet.Cells[row, 2 + (numOfHeuristics * annotationNum) + i].Value = "FALSE";
                 }
             }
-
+            
             for (var i = 0; i < applicableHeuristics.Count(); i++)
             {
                 _sheet.Cells[row, 2 + (numOfHeuristics * annotationNum) + i].Value = applicableHeuristics[i].IsApplicable;
@@ -226,12 +226,19 @@ namespace DataSetExplorer.Core.DataSetSerializer
             var heuristicsForExport = new List<SmellHeuristic>();
             foreach (var heuristic in heuristics)
             {
+                var foundHeur = false;
                 foreach (var applicableHeur in applicableHeuristics)
                 {
                     if (heuristic.Name.Equals(applicableHeur.Description)) {
                         heuristicsForExport.Add(applicableHeur);
+                        foundHeur = true;
                         break;
                     }
+                }
+
+                if (!foundHeur)
+                {
+                    heuristicsForExport.Add(new SmellHeuristic(heuristic.Name, false, ""));
                 }
             }
             return heuristicsForExport;
