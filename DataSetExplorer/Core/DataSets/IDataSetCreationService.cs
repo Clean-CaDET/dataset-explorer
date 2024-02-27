@@ -15,6 +15,7 @@ namespace DataSetExplorer.Core.DataSets
         Result<string> CreateDataSetSpreadsheet(string dataSetName, string basePath, IDictionary<string, string> projects, List<CodeSmell> codeSmells, NewSpreadSheetColumnModel columnModel);
         Result<DataSet> CreateEmptyDataSet(string dataSetName, List<CodeSmell> codeSmells);
         Result<DataSetProject> AddProjectToDataSet(int dataSetId, string basePath, DataSetProject project, List<SmellFilter> smellFilters, ProjectBuildSettingsDTO projectBuildSettings);
+        Result<DataSet> AddMultipleProjectsToDataSet(int id, string basePath, string filePath, List<SmellFilter> smellFilters);
         Result<DatasetDetailDTO> GetDataSet(int id);
         Result<IEnumerable<DatasetSummaryDTO>> GetAllDataSets();
         Result<IEnumerable<DataSet>> GetDataSetsByCodeSmell(string codeSmellName);

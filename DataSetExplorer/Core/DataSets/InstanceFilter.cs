@@ -18,6 +18,7 @@ namespace DataSetExplorer.Core.DataSets
 
         public List<Instance> FilterInstances(CodeSmell codeSmell, List<Instance> instances, int numOfInstances)
         {
+            if (SmellFilters.Count == 0) return instances;
             var filteredInstances = new List<Instance>();
             var metricsThresholds = SmellFilters.Find(f => f.CodeSmell.Equals(codeSmell)).MetricsThresholds;
 

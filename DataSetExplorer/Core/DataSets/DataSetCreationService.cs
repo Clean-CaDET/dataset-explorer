@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using CodeModel.CodeParsers.CSharp.Exceptions;
 using DataSetExplorer.Core.Annotations.Model;
@@ -17,6 +18,7 @@ using FluentResults;
 using LibGit2Sharp;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using OfficeOpenXml;
 
 namespace DataSetExplorer.Core.DataSets
 {
@@ -52,6 +54,34 @@ namespace DataSetExplorer.Core.DataSets
             
             _dataSetRepository.Update(initialDataSet);
             return Result.Ok(project);
+        }
+
+        public Result<DataSet> AddMultipleProjectsToDataSet(int dataSetId, string basePath, string projectsFilePath, List<SmellFilter> smellFilters)
+        {
+            var initialDataSet = _dataSetRepository.GetDataSetWithProjectsAndCodeSmells(dataSetId);
+            if (initialDataSet == default) return Result.Fail($"DataSet with id: {dataSetId} does not exist.");
+
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            var sheets = new ExcelPackage(new FileInfo(projectsFilePath)).Workbook.Worksheets;
+
+            for (int i = 0; i < 100; i++)
+            {
+                string rowNumber = (i + 2).ToString();
+                string group = sheets[0].Cells["A" + rowNumber].Text;
+                if (group == null || group == "") break;
+                string team = sheets[0].Cells["B" + rowNumber].Text;
+                string projectUrl = sheets[0].Cells["C" + rowNumber].Text;
+                List<string> ignoredFolders = sheets[0].Cells["D" + rowNumber].Text.Split(";").ToList();
+
+                DataSetProject project = new DataSetProject("Project" + group + "." + team, projectUrl);
+                ProjectBuildSettingsDTO projectBuildSettings = new ProjectBuildSettingsDTO(ignoredFolders);
+                ProcessInitialDataSetProject(basePath, project, initialDataSet.SupportedCodeSmells, smellFilters, projectBuildSettings);
+                initialDataSet.AddProject(project);
+
+                _dataSetRepository.Update(initialDataSet);
+            }
+
+            return Result.Ok(initialDataSet);
         }
 
         public Result<string> CreateDataSetSpreadsheet(string dataSetName, string basePath, IDictionary<string, string> projects, List<CodeSmell> codeSmells)

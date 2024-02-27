@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 using LibGit2Sharp;
 
 namespace DataSetExplorer.Infrastructure.RepositoryAdapters
@@ -9,9 +7,14 @@ namespace DataSetExplorer.Infrastructure.RepositoryAdapters
     {
         public void CloneRepository(string url, string projectPath)
         {
-            if(Directory.Exists(projectPath)) DeleteDirectory(projectPath);
+            CloneOptions co = new CloneOptions();
+            // SET GIT USER AND GIT TOKEN
+            string gitUser = "", gitToken = "";
+            co.CredentialsProvider = (_url, _user, _cred) => new UsernamePasswordCredentials { Username = gitUser, Password = gitToken };
+
+            if (Directory.Exists(projectPath)) DeleteDirectory(projectPath);
             Directory.CreateDirectory(projectPath);
-            Repository.Clone(url, projectPath);
+            Repository.Clone(url, projectPath, co);
         }
 
         public void CheckoutCommit(string commitHash, string projectPath)

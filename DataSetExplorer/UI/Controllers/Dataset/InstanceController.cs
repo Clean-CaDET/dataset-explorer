@@ -42,8 +42,9 @@ namespace DataSetExplorer.UI.Controllers.Dataset
             if (result.IsFailed) return BadRequest(new { message = result.Reasons[0].Message });
             var LoadedFile = _instanceService.GetFileFromGit(result.Value.Link);
             var exporter = new ClassCohesionGraphExporter();
-            var project = new CodeModelFactory().CreateProject(new []{ LoadedFile });
+            var project = new CodeModelFactory(true).CreateProject(new []{ LoadedFile });
             var actualClass = project.Classes;
+            if (actualClass.Count == 0) return Ok();
             return Ok(exporter.GetJSON(actualClass[0]));
         }
     }

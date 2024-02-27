@@ -87,7 +87,17 @@ namespace DataSetExplorer.UI.Controllers.Dataset
             if (result.IsFailed) return BadRequest(new { message = result.Reasons[0].Message });
             return Accepted(result.Value);
         }
-        
+
+        [HttpPost]
+        [Route("{id}/multipleProjects")]
+        public IActionResult CreateMultipleDataSetProject([FromBody] MultipleProjectsCreationDTO data, [FromRoute] int id)
+        {
+            var smellFilters = _mapper.Map<List<SmellFilter>>(data.SmellFilters);
+            var result = _dataSetCreationService.AddMultipleProjectsToDataSet(id, _gitClonePath, data.FilePath, smellFilters);
+            if (result.IsFailed) return BadRequest(new { message = result.Reasons[0].Message });
+            return Accepted(result.Value);
+        }
+
         [HttpGet]
         [Route("{id}/code-smells")]
         public IActionResult GetDataSetCodeSmells([FromRoute] int id)
