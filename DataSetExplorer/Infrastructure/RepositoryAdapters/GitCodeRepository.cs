@@ -1,7 +1,5 @@
 ﻿using System.IO;
-using AutoMapper.Configuration;
 using LibGit2Sharp;
-using Microsoft.Extensions.Configuration;
 
 namespace DataSetExplorer.Infrastructure.RepositoryAdapters
 {
@@ -22,11 +20,12 @@ namespace DataSetExplorer.Infrastructure.RepositoryAdapters
             Commands.Checkout(new Repository(projectPath), commitHash);
         }
 
-        public void SetupRepository(string urlWithCommitHash, string projectPath, string gitUser, string gitToken)
+        public void SetupRepository(string urlWithCommitHash, string projectPath, string gitUser, string gitToken, string environmentType)
         {
             var urlParts = urlWithCommitHash.Split("/tree/");
             var projectUrl = urlParts[0] + ".git";
-            CloneRepository(projectUrl, projectPath, gitUser, gitToken);
+            
+            if (environmentType.Equals("local")) CloneRepository(projectUrl, projectPath, gitUser, gitToken);
 
             var commitHash = urlParts[1];
             CheckoutCommit(commitHash, projectPath);

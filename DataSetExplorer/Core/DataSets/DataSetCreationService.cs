@@ -131,10 +131,11 @@ namespace DataSetExplorer.Core.DataSets
 
         private DataSetProject CreateDataSetProject(string basePath, string projectName, string projectAndCommitUrl, List<CodeSmell> codeSmells, List<SmellFilter> smellFilters, ProjectBuildSettingsDTO projectBuildSettings)
         {
-            var gitFolderPath = basePath + projectName + Path.DirectorySeparatorChar + "git";
+            var gitFolderPath = basePath + projectName;
             var gitUser = _configuration.GetValue<string>("GitCredentials:User");
             var gitToken = _configuration.GetValue<string>("GitCredentials:Token");
-            _codeRepository.SetupRepository(projectAndCommitUrl, gitFolderPath, gitUser, gitToken);
+            var environmentType = _configuration.GetValue<string>("Environment:Type");
+            _codeRepository.SetupRepository(projectAndCommitUrl, gitFolderPath, gitUser, gitToken, environmentType);
             return CreateDataSetProjectFromRepository(projectAndCommitUrl, projectName, gitFolderPath, codeSmells, smellFilters, projectBuildSettings);
         }
 
