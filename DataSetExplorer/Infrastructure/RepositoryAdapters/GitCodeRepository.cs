@@ -1,15 +1,15 @@
 ﻿using System.IO;
+using AutoMapper.Configuration;
 using LibGit2Sharp;
+using Microsoft.Extensions.Configuration;
 
 namespace DataSetExplorer.Infrastructure.RepositoryAdapters
 {
     public class GitCodeRepository : ICodeRepository
     {
-        public void CloneRepository(string url, string projectPath)
+        public void CloneRepository(string url, string projectPath, string gitUser, string gitToken)
         {
             CloneOptions co = new CloneOptions();
-            // SET GIT USER AND GIT TOKEN
-            string gitUser = "", gitToken = "";
             co.CredentialsProvider = (_url, _user, _cred) => new UsernamePasswordCredentials { Username = gitUser, Password = gitToken };
 
             if (Directory.Exists(projectPath)) DeleteDirectory(projectPath);
@@ -22,11 +22,11 @@ namespace DataSetExplorer.Infrastructure.RepositoryAdapters
             Commands.Checkout(new Repository(projectPath), commitHash);
         }
 
-        public void SetupRepository(string urlWithCommitHash, string projectPath)
+        public void SetupRepository(string urlWithCommitHash, string projectPath, string gitUser, string gitToken)
         {
             var urlParts = urlWithCommitHash.Split("/tree/");
             var projectUrl = urlParts[0] + ".git";
-            CloneRepository(projectUrl, projectPath);
+            CloneRepository(projectUrl, projectPath, gitUser, gitToken);
 
             var commitHash = urlParts[1];
             CheckoutCommit(commitHash, projectPath);

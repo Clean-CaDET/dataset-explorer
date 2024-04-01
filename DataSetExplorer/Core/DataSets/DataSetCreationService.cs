@@ -73,7 +73,7 @@ namespace DataSetExplorer.Core.DataSets
                 string projectUrl = sheets[0].Cells["C" + rowNumber].Text;
                 List<string> ignoredFolders = sheets[0].Cells["D" + rowNumber].Text.Split(";").ToList();
 
-                DataSetProject project = new DataSetProject("Project" + group + "." + team, projectUrl);
+                DataSetProject project = new DataSetProject(group + "." + team, projectUrl);
                 ProjectBuildSettingsDTO projectBuildSettings = new ProjectBuildSettingsDTO(ignoredFolders);
                 ProcessInitialDataSetProject(basePath, project, initialDataSet.SupportedCodeSmells, smellFilters, projectBuildSettings);
                 initialDataSet.AddProject(project);
@@ -132,7 +132,9 @@ namespace DataSetExplorer.Core.DataSets
         private DataSetProject CreateDataSetProject(string basePath, string projectName, string projectAndCommitUrl, List<CodeSmell> codeSmells, List<SmellFilter> smellFilters, ProjectBuildSettingsDTO projectBuildSettings)
         {
             var gitFolderPath = basePath + projectName + Path.DirectorySeparatorChar + "git";
-            _codeRepository.SetupRepository(projectAndCommitUrl, gitFolderPath);
+            var gitUser = _configuration.GetValue<string>("GitCredentials:User");
+            var gitToken = _configuration.GetValue<string>("GitCredentials:Token");
+            _codeRepository.SetupRepository(projectAndCommitUrl, gitFolderPath, gitUser, gitToken);
             return CreateDataSetProjectFromRepository(projectAndCommitUrl, projectName, gitFolderPath, codeSmells, smellFilters, projectBuildSettings);
         }
 

@@ -80,7 +80,7 @@ namespace DataSetExplorer.Core.Annotations
 
         public Result<string> ExportMembersFromAnnotatedClasses(IDictionary<string, string> projects, string datasetPath, string outputFolder)
         {
-            CodeModelFactory factory = new CodeModelFactory();
+            CodeModelFactory factory = new CodeModelFactory(true);
 
             try
             {

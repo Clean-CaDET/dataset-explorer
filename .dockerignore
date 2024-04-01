@@ -1,0 +1,17 @@
+Dockerfile*
+.dockerignore
+.git
+.idea
+.github
+.gitignore
+README.md
+SETUP.md
+LICENSE
+**/bin/
+**/obj/
+**/out/
+**/*.md
+stacks/
+.vs
+DataSetExplorerTests
+DataSetExplorerTests/

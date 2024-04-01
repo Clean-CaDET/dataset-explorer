@@ -30,7 +30,7 @@ namespace DataSetExplorer.Core.DataSets
             var allAnnotatedInstances = new List<SmellCandidateInstances>();
             foreach (var projectSourceLocation in projects.Keys)
             {
-                CodeModelFactory factory = new CodeModelFactory();
+                CodeModelFactory factory = new CodeModelFactory(true);
                 CaDETProject project = factory.CreateProjectWithCodeFileLinks(projectSourceLocation);
 
                 var importer = new ExcelImporter(projects[projectSourceLocation], _annotationRepository);
@@ -72,11 +72,14 @@ namespace DataSetExplorer.Core.DataSets
                 foreach (var importedInstance in importedCandidate.Instances)
                 {
                     var instance = candidate.Instances.Find(x => x.Link.Equals(importedInstance.Link));
-                    foreach (var existingAnnotation in instance.Annotations)
+                    if (instance != null)
                     {
-                        if (AnnotationExists(importedInstance, existingAnnotation)) return;
+                        foreach (var existingAnnotation in instance.Annotations)
+                        {
+                            if (AnnotationExists(importedInstance, existingAnnotation)) return;
+                        }
+                        instance.AddAnnotation(importedInstance.Annotations.First());
                     }
-                    instance.AddAnnotation(importedInstance.Annotations.First());
                 }
             }
         }
