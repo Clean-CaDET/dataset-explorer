@@ -6,6 +6,6 @@ namespace DataSetExplorer.Infrastructure.RepositoryAdapters
     {
         void CloneRepository(string url, string projectPath, string gitUser, string gitToken);
         void CheckoutCommit(string commitHash, string projectPath);
-        void SetupRepository(string urlWithCommitHash, string projectPath, string gitUser, string gitToken, string environmentType);
+        void SetupRepository(string urlWithCommitHash, string projectPath, string gitUser, string gitToken);
     }
 }

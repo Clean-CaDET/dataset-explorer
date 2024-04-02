@@ -20,13 +20,12 @@ namespace DataSetExplorer.Infrastructure.RepositoryAdapters
             Commands.Checkout(new Repository(projectPath), commitHash);
         }
 
-        public void SetupRepository(string urlWithCommitHash, string projectPath, string gitUser, string gitToken, string environmentType)
+        public void SetupRepository(string urlWithCommitHash, string projectPath, string gitUser, string gitToken)
         {
             var urlParts = urlWithCommitHash.Split("/tree/");
             var projectUrl = urlParts[0] + ".git";
-            
-            if (environmentType.Equals("local")) CloneRepository(projectUrl, projectPath, gitUser, gitToken);
 
+            CloneRepository(projectUrl, projectPath, gitUser, gitToken);
             var commitHash = urlParts[1];
             CheckoutCommit(commitHash, projectPath);
         }

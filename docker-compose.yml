@@ -27,6 +27,8 @@ services:
         max-file: "6"
     depends_on:
       - database
+    volumes:
+      - ":/etc/dataset-explorer/ClonedProjects"
   database:
     image: postgres:${POSTGRES_VERSION-13}
     restart: always

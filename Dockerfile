@@ -17,6 +17,7 @@ ENV ASPNETCORE_URLS=http://*:$PORT
 FROM base AS final
 COPY --from=publish /app .
 WORKDIR /app/publish
+RUN apt-get update && apt-get install -y git
 CMD ["dotnet", "DataSetExplorer.dll"]
 
 
