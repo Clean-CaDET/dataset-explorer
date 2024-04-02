@@ -31,6 +31,8 @@ services:
       - ":/etc/dataset-explorer/ClonedProjects"
   database:
     image: postgres:${POSTGRES_VERSION-13}
+    extra_hosts:
+      - "localhost:127.0.0.1"
     restart: always
     networks:
       - database
