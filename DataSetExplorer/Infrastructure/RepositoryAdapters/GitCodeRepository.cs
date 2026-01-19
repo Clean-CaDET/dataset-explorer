@@ -24,8 +24,9 @@ namespace DataSetExplorer.Infrastructure.RepositoryAdapters
         {
             var urlParts = urlWithCommitHash.Split("/tree/");
             var projectUrl = urlParts[0] + ".git";
-            
-            if (environmentType.Equals("local")) CloneRepository(projectUrl, projectPath, gitUser, gitToken);
+
+            // Always clone repository regardless of environment
+            CloneRepository(projectUrl, projectPath, gitUser, gitToken);
 
             var commitHash = urlParts[1];
             CheckoutCommit(commitHash, projectPath);

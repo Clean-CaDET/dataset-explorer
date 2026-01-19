@@ -6,6 +6,7 @@ using DataSetExplorer.Core.DataSetSerializer.ViewModel;
 using DataSetExplorer.UI.Controllers.Dataset.DTOs;
 using DataSetExplorer.UI.Controllers.Dataset.DTOs.Summary;
 using FluentResults;
+using Microsoft.AspNetCore.Http;
 
 namespace DataSetExplorer.Core.DataSets
 {
@@ -15,7 +16,6 @@ namespace DataSetExplorer.Core.DataSets
         Result<string> CreateDataSetSpreadsheet(string dataSetName, string basePath, IDictionary<string, string> projects, List<CodeSmell> codeSmells, NewSpreadSheetColumnModel columnModel);
         Result<DataSet> CreateEmptyDataSet(string dataSetName, List<CodeSmell> codeSmells);
         Result<DataSetProject> AddProjectToDataSet(int dataSetId, string basePath, DataSetProject project, List<SmellFilter> smellFilters, ProjectBuildSettingsDTO projectBuildSettings);
-        Result<DataSet> AddMultipleProjectsToDataSet(int id, string basePath, string filePath, List<SmellFilter> smellFilters);
         Result<DatasetDetailDTO> GetDataSet(int id);
         Result<IEnumerable<DatasetSummaryDTO>> GetAllDataSets();
         Result<IEnumerable<DataSet>> GetDataSetsByCodeSmell(string codeSmellName);
@@ -26,5 +26,6 @@ namespace DataSetExplorer.Core.DataSets
         Result<DataSetProject> DeleteDataSetProject(int id);
         Result<DataSetProject> UpdateDataSetProject(DataSetProject project);
         Result<Dictionary<string, int>> ExportCommunities(Graph Graph);
+        Result<DataSet> ImportProjectsToDataSet(int id, string basePath, IFormFile projectsFile, List<SmellFilter> smellFilters);
     }
 }
