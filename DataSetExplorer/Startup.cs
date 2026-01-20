@@ -30,6 +30,8 @@ namespace DataSetExplorer
 
         public void ConfigureServices(IServiceCollection services)
         {
+            SetupGitCredentialsFromEnvironment();
+
             services.AddSingleton(Configuration);
 
             services.AddAutoMapper(typeof(Startup));
@@ -94,12 +96,28 @@ namespace DataSetExplorer
             string port = Environment.GetEnvironmentVariable("DATABASE_PORT") ?? "5432";
             string database = Environment.GetEnvironmentVariable("DATABASE_SCHEMA") ?? "data-set-explorer-db";
             string user = Environment.GetEnvironmentVariable("DATABASE_USERNAME") ?? "postgres";
-            string password = Environment.GetEnvironmentVariable("DATABASE_PASSWORD") ?? "super";
+            string password = Environment.GetEnvironmentVariable("DATABASE_PASSWORD") ?? "simke";
             string integratedSecurity = Environment.GetEnvironmentVariable("DATABASE_INTEGRATED_SECURITY") ?? "false";
             string pooling = Environment.GetEnvironmentVariable("DATABASE_POOLING") ?? "true";
 
             return
                 $"Server={server};Port={port};Database={database};User ID={user};Password={password};Integrated Security={integratedSecurity};Pooling={pooling};";
+        }
+
+        private void SetupGitCredentialsFromEnvironment()
+        {
+            string gitUser = Environment.GetEnvironmentVariable("GIT_USER");
+            string gitToken = Environment.GetEnvironmentVariable("GIT_TOKEN");
+
+            if (!string.IsNullOrEmpty(gitUser))
+            {
+                Configuration["GitCredentials:User"] = gitUser;
+            }
+
+            if (!string.IsNullOrEmpty(gitToken))
+            {
+                Configuration["GitCredentials:Token"] = gitToken;
+            }
         }
     }
 }

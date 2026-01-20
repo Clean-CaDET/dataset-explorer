@@ -51,6 +51,10 @@ RUN mkdir -p /app/uploads
 ENV ASPNETCORE_URLS=http://+:5000
 ENV ASPNETCORE_ENVIRONMENT=Production
 
+# Set Git credentials (override these when running the container)
+ENV GIT_USER=""
+ENV GIT_TOKEN=""
+
 # Set library search path for LibGit2Sharp native library
 ENV LD_LIBRARY_PATH=/app:/app/runtimes/debian.9-x64/native:/usr/lib/x86_64-linux-gnu
 
