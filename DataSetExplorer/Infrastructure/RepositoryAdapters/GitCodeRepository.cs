@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using LibGit2Sharp;
 
 namespace DataSetExplorer.Infrastructure.RepositoryAdapters
@@ -7,17 +8,66 @@ namespace DataSetExplorer.Infrastructure.RepositoryAdapters
     {
         public void CloneRepository(string url, string projectPath, string gitUser, string gitToken)
         {
-            CloneOptions co = new CloneOptions();
-            co.CredentialsProvider = (_url, _user, _cred) => new UsernamePasswordCredentials { Username = gitUser, Password = gitToken };
-
             if (Directory.Exists(projectPath)) DeleteDirectory(projectPath);
             Directory.CreateDirectory(projectPath);
-            Repository.Clone(url, projectPath, co);
+
+            // Use native git command to avoid LibGit2Sharp permission issues on Docker volumes
+            var gitUrl = url;
+            if (!string.IsNullOrEmpty(gitUser) && !string.IsNullOrEmpty(gitToken))
+            {
+                // Insert credentials into URL if provided
+                var urlParts = url.Replace("https://", "").Replace("http://", "");
+                gitUrl = $"https://{gitUser}:{gitToken}@{urlParts}";
+            }
+
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = "git",
+                Arguments = $"clone {gitUrl} \"{projectPath}\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using (var process = Process.Start(processInfo))
+            {
+                process.WaitForExit();
+                var output = process.StandardOutput.ReadToEnd();
+                var error = process.StandardError.ReadToEnd();
+
+                if (process.ExitCode != 0)
+                {
+                    throw new System.Exception($"Git clone failed: {error}");
+                }
+            }
         }
 
         public void CheckoutCommit(string commitHash, string projectPath)
         {
-            Commands.Checkout(new Repository(projectPath), commitHash);
+            // Use native git command to avoid LibGit2Sharp permission issues
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = "git",
+                Arguments = $"checkout {commitHash}",
+                WorkingDirectory = projectPath,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using (var process = Process.Start(processInfo))
+            {
+                process.WaitForExit();
+                var output = process.StandardOutput.ReadToEnd();
+                var error = process.StandardError.ReadToEnd();
+
+                if (process.ExitCode != 0)
+                {
+                    throw new System.Exception($"Git checkout failed: {error}");
+                }
+            }
         }
 
         public void SetupRepository(string urlWithCommitHash, string projectPath, string gitUser, string gitToken)

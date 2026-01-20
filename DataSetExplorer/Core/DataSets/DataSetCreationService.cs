@@ -179,7 +179,7 @@ namespace DataSetExplorer.Core.DataSets
             var gitUser = _configuration.GetValue<string>("GitCredentials:User");
             var gitToken = _configuration.GetValue<string>("GitCredentials:Token");
             var environmentType = _configuration.GetValue<string>("Environment:Type");
-            if (environmentType.Equals("local")) _codeRepository.SetupRepository(projectAndCommitUrl, gitFolderPath, gitUser, gitToken);
+            if (environmentType.Equals("local") || environmentType.Equals("docker")) _codeRepository.SetupRepository(projectAndCommitUrl, gitFolderPath, gitUser, gitToken);
             return CreateDataSetProjectFromRepository(projectAndCommitUrl, projectName, gitFolderPath, codeSmells, smellFilters, projectBuildSettings);
         }
 

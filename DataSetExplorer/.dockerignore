@@ -1,0 +1,53 @@
+# Build artifacts
+bin/
+obj/
+out/
+
+# Git repositories cloned by the application
+ClonedProjects/
+
+# Database migrations (included but don't need in build context)
+Migrations/
+
+# Python virtual environments
+Core/AnnotationConsistency/venv/
+*.pyc
+__pycache__/
+
+# Git and version control
+.git/
+.gitignore
+.gitattributes
+
+# IDE and editor files
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.idea/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files
+Dockerfile
+.dockerignore
+
+# Documentation
+*.md
+README*
+
+# Test files (if not needed in production)
+*Tests/
+test-results/
