@@ -71,8 +71,11 @@ namespace DataSetExplorer
             services.AddScoped<IAuthRepository, AuthRepository>();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DataSetExplorerContext dbContext)
         {
+            // Automatically apply any pending database migrations on startup
+            dbContext.Database.Migrate();
+
             app.UseCors(builder =>
             {
                 builder

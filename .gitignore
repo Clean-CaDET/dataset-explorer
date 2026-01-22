@@ -546,3 +546,19 @@ $RECYCLE.BIN/
 #JetBrains
 .DS_Store
 .idea
+
+.claude
+
+NUL
+nul
+
+ClonedProjects
+
+# virutalenv for python
+venv
+
+# Environment variables (contains secrets and personal paths)
+.env
+
+# Generated SQL migration files (EF generates these on demand)
+*.sql

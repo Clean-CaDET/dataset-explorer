@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DataSetExplorer.Migrations
 {
     [DbContext(typeof(DataSetExplorerContext))]
-    [Migration("20220410002913_Initial")]
+    [Migration("20260122181847_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,6 +20,77 @@ namespace DataSetExplorer.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63)
                 .HasAnnotation("ProductVersion", "5.0.6")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+            modelBuilder.Entity("DataSetExplorer.Core.AnnotationSchema.Model.CodeSmellDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SnippetType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("CodeSmellDefinitions");
+                });
+
+            modelBuilder.Entity("DataSetExplorer.Core.AnnotationSchema.Model.HeuristicDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<int?>("CodeSmellDefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CodeSmellDefinitionId");
+
+                    b.ToTable("HeuristicDefinitions");
+                });
+
+            modelBuilder.Entity("DataSetExplorer.Core.AnnotationSchema.Model.SeverityDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<int?>("CodeSmellDefinitionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CodeSmellDefinitionId");
+
+                    b.ToTable("SeverityDefinitions");
+                });
 
             modelBuilder.Entity("DataSetExplorer.Core.Annotations.Model.Annotation", b =>
                 {
@@ -40,8 +111,8 @@ namespace DataSetExplorer.Migrations
                     b.Property<string>("Note")
                         .HasColumnType("text");
 
-                    b.Property<int>("Severity")
-                        .HasColumnType("integer");
+                    b.Property<string>("Severity")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -51,7 +122,7 @@ namespace DataSetExplorer.Migrations
 
                     b.HasIndex("InstanceSmellId");
 
-                    b.ToTable("DataSetAnnotations");
+                    b.ToTable("Annotations");
                 });
 
             modelBuilder.Entity("DataSetExplorer.Core.Annotations.Model.Annotator", b =>
@@ -61,6 +132,12 @@ namespace DataSetExplorer.Migrations
                         .HasColumnType("integer")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
                     b.Property<int>("Ranking")
                         .HasColumnType("integer");
 
@@ -68,6 +145,9 @@ namespace DataSetExplorer.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Annotators");
                 });
@@ -83,6 +163,10 @@ namespace DataSetExplorer.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SnippetType")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -116,6 +200,30 @@ namespace DataSetExplorer.Migrations
                     b.HasIndex("AnnotationId");
 
                     b.ToTable("SmellHeuristics");
+                });
+
+            modelBuilder.Entity("DataSetExplorer.Core.CleanCodeAnalysis.Model.Identifier", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<int?>("InstanceId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InstanceId");
+
+                    b.ToTable("Identifiers");
                 });
 
             modelBuilder.Entity("DataSetExplorer.Core.DataSets.Model.DataSet", b =>
@@ -159,6 +267,59 @@ namespace DataSetExplorer.Migrations
                     b.ToTable("DataSetProjects");
                 });
 
+            modelBuilder.Entity("DataSetExplorer.Core.DataSets.Model.GraphInstance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<string>("CodeSnippetId")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("DataSetProjectId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Link")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DataSetProjectId");
+
+                    b.ToTable("GraphInstances");
+                });
+
+            modelBuilder.Entity("DataSetExplorer.Core.DataSets.Model.GraphRelatedInstance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<string>("CodeSnippetId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CouplingTypeAndStrength")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("GraphInstanceId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Link")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RelationType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GraphInstanceId");
+
+                    b.ToTable("GraphRelatedInstances");
+                });
+
             modelBuilder.Entity("DataSetExplorer.Core.DataSets.Model.Instance", b =>
                 {
                     b.Property<int>("Id")
@@ -188,7 +349,7 @@ namespace DataSetExplorer.Migrations
 
                     b.HasIndex("SmellCandidateInstancesId");
 
-                    b.ToTable("DataSetInstances");
+                    b.ToTable("Instances");
                 });
 
             modelBuilder.Entity("DataSetExplorer.Core.DataSets.Model.RelatedInstance", b =>
@@ -243,6 +404,22 @@ namespace DataSetExplorer.Migrations
                     b.ToTable("SmellCandidateInstances");
                 });
 
+            modelBuilder.Entity("DataSetExplorer.Core.AnnotationSchema.Model.HeuristicDefinition", b =>
+                {
+                    b.HasOne("DataSetExplorer.Core.AnnotationSchema.Model.CodeSmellDefinition", null)
+                        .WithMany("Heuristics")
+                        .HasForeignKey("CodeSmellDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("DataSetExplorer.Core.AnnotationSchema.Model.SeverityDefinition", b =>
+                {
+                    b.HasOne("DataSetExplorer.Core.AnnotationSchema.Model.CodeSmellDefinition", null)
+                        .WithMany("Severities")
+                        .HasForeignKey("CodeSmellDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
             modelBuilder.Entity("DataSetExplorer.Core.Annotations.Model.Annotation", b =>
                 {
                     b.HasOne("DataSetExplorer.Core.Annotations.Model.Annotator", "Annotator")
@@ -280,11 +457,35 @@ namespace DataSetExplorer.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
+            modelBuilder.Entity("DataSetExplorer.Core.CleanCodeAnalysis.Model.Identifier", b =>
+                {
+                    b.HasOne("DataSetExplorer.Core.DataSets.Model.Instance", null)
+                        .WithMany("Identifiers")
+                        .HasForeignKey("InstanceId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
             modelBuilder.Entity("DataSetExplorer.Core.DataSets.Model.DataSetProject", b =>
                 {
                     b.HasOne("DataSetExplorer.Core.DataSets.Model.DataSet", null)
                         .WithMany("Projects")
                         .HasForeignKey("DataSetId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("DataSetExplorer.Core.DataSets.Model.GraphInstance", b =>
+                {
+                    b.HasOne("DataSetExplorer.Core.DataSets.Model.DataSetProject", null)
+                        .WithMany("GraphInstances")
+                        .HasForeignKey("DataSetProjectId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("DataSetExplorer.Core.DataSets.Model.GraphRelatedInstance", b =>
+                {
+                    b.HasOne("DataSetExplorer.Core.DataSets.Model.GraphInstance", null)
+                        .WithMany("RelatedInstances")
+                        .HasForeignKey("GraphInstanceId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
@@ -319,6 +520,13 @@ namespace DataSetExplorer.Migrations
                     b.Navigation("CodeSmell");
                 });
 
+            modelBuilder.Entity("DataSetExplorer.Core.AnnotationSchema.Model.CodeSmellDefinition", b =>
+                {
+                    b.Navigation("Heuristics");
+
+                    b.Navigation("Severities");
+                });
+
             modelBuilder.Entity("DataSetExplorer.Core.Annotations.Model.Annotation", b =>
                 {
                     b.Navigation("ApplicableHeuristics");
@@ -334,11 +542,20 @@ namespace DataSetExplorer.Migrations
             modelBuilder.Entity("DataSetExplorer.Core.DataSets.Model.DataSetProject", b =>
                 {
                     b.Navigation("CandidateInstances");
+
+                    b.Navigation("GraphInstances");
+                });
+
+            modelBuilder.Entity("DataSetExplorer.Core.DataSets.Model.GraphInstance", b =>
+                {
+                    b.Navigation("RelatedInstances");
                 });
 
             modelBuilder.Entity("DataSetExplorer.Core.DataSets.Model.Instance", b =>
                 {
                     b.Navigation("Annotations");
+
+                    b.Navigation("Identifiers");
 
                     b.Navigation("RelatedInstances");
                 });
