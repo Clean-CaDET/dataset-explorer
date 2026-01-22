@@ -67,7 +67,7 @@ namespace DataSetExplorer.UI.Controllers.Dataset
         public IActionResult ExportCleanCodeAnalysis([FromRoute] int id, [FromBody] CleanCodeAnalysisDTO dataSetDTO)
         {
             var exportPath = _cleanCodeAnalysisService.ExportDatasetAnalysis(id, dataSetDTO).Value;
-            return Ok(new FluentResults.Result().WithSuccess("Successfully exported to " + exportPath));
+            return Ok(new FluentResults.Result().WithSuccess("Successfully exported!"));
         }
 
         [HttpPost]
