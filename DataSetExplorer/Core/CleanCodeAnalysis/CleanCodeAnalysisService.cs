@@ -1,10 +1,12 @@
-﻿using CodeModel.CaDETModel.CodeItems;
+using CodeModel.CaDETModel.CodeItems;
 using DataSetExplorer.Core.CleanCodeAnalysis.Model;
 using DataSetExplorer.Core.DataSets;
 using DataSetExplorer.Core.DataSets.Model;
+using DataSetExplorer.Core.DataSets.Repository;
 using DataSetExplorer.UI.Controllers.Dataset.DTOs;
 using FluentResults;
 using OfficeOpenXml;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -21,48 +23,117 @@ namespace DataSetExplorer.Core.CleanCodeAnalysis
         private ExcelPackage _excelFile;
         private ExcelWorksheet _sheet;
         private readonly IInstanceService _instanceService;
+        private readonly IDataSetRepository _dataSetRepository;
+        private readonly IProjectRepository _projectRepository;
 
-        public CleanCodeAnalysisService(IInstanceService instanceService)
+        public CleanCodeAnalysisService(IInstanceService instanceService, IDataSetRepository dataSetRepository, IProjectRepository projectRepository)
         {
             _instanceService = instanceService;
+            _dataSetRepository = dataSetRepository;
+            _projectRepository = projectRepository;
         }
 
         public Result<string> ExportDatasetAnalysis(int datasetId, CleanCodeAnalysisDTO analysisOptions)
         {
-            _exportPath = analysisOptions.ExportPath;
+            string datasetFolderPath = CreateDatasetExportFolder(datasetId);
+
             foreach (var option in analysisOptions.CleanCodeOptions)
             {
                 if (option.Equals("Clean names"))
-                    ExportCleanNamesAnalysis(_instanceService.GetInstancesWithIdentifiersByDatasetId(datasetId).Value);
+                    ExportCleanNamesAnalysis(_instanceService.GetInstancesWithIdentifiersByDatasetId(datasetId).Value, datasetFolderPath);
                 if (option.Equals("Clean functions"))
-                    ExportCleanFunctionsAnalysis(_instanceService.GetInstancesByDatasetId(datasetId).Value);
+                    ExportCleanFunctionsAnalysis(_instanceService.GetInstancesByDatasetId(datasetId).Value, datasetFolderPath);
                 if (option.Equals("Clean classes"))
-                    ExportCleanClassesAnalysis(_instanceService.GetInstancesByDatasetId(datasetId).Value);
+                    ExportCleanClassesAnalysis(_instanceService.GetInstancesByDatasetId(datasetId).Value, datasetFolderPath);
             }
-            return Result.Ok(analysisOptions.ExportPath);
+            return Result.Ok(datasetFolderPath);
+        }
+
+        private string CreateDatasetExportFolder(int datasetId)
+        {
+            string datasetFolderPath = GetExportPathForDataset(datasetId);
+            Directory.CreateDirectory(datasetFolderPath);
+            return datasetFolderPath;
+        }
+
+        private string GetExportPathForDataset(int datasetId)
+        {
+            var dataset = _dataSetRepository.GetDataSetWithProjectsAndCodeSmells(datasetId);
+            var datasetName = SanitizeFolderName(dataset.Name);
+
+            var datasetFolderPath = GetUniqueExportPath("/app/exports", datasetName);
+            datasetFolderPath = EndPathWithSeparator(datasetFolderPath);
+
+            return datasetFolderPath;
+        }
+
+        private static string EndPathWithSeparator(string folderPath)
+        {
+            if (!folderPath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                folderPath += Path.DirectorySeparatorChar;
+            }
+
+            return folderPath;
         }
 
         public Result<string> ExportProjectAnalysis(int projectId, CleanCodeAnalysisDTO analysisOptions)
         {
-            _exportPath = analysisOptions.ExportPath;
+            string projectFolderPath = CreateProjectExportFolder(projectId);
+
             foreach (var option in analysisOptions.CleanCodeOptions)
             {
                 if (option.Equals("Clean names"))
-                    ExportCleanNamesAnalysis(_instanceService.GetInstancesWithIdentifiersByProjectId(projectId).Value);
+                    ExportCleanNamesAnalysis(_instanceService.GetInstancesWithIdentifiersByProjectId(projectId).Value, projectFolderPath);
                 if (option.Equals("Clean functions"))
-                    ExportCleanFunctionsAnalysis(_instanceService.GetInstancesByProjectId(projectId).Value);
+                    ExportCleanFunctionsAnalysis(_instanceService.GetInstancesByProjectId(projectId).Value, projectFolderPath);
                 if (option.Equals("Clean classes"))
-                    ExportCleanClassesAnalysis(_instanceService.GetInstancesByProjectId(projectId).Value);
+                    ExportCleanClassesAnalysis(_instanceService.GetInstancesByProjectId(projectId).Value, projectFolderPath);
             }
-            return Result.Ok(analysisOptions.ExportPath);
+            return Result.Ok(projectFolderPath);
         }
 
-        private void ExportCleanNamesAnalysis(Dictionary<string, List<Instance>> projectsAndInstances)
+        private string CreateProjectExportFolder(int projectId)
+        {
+            var datasetFolderPath = GetExportPathForProject(projectId);
+            Directory.CreateDirectory(datasetFolderPath);
+
+            var projectFolderPath = GetUniqueExportPath(datasetFolderPath, GetProjectName(projectId));
+            projectFolderPath = EndPathWithSeparator(projectFolderPath);
+
+            Directory.CreateDirectory(projectFolderPath);
+            return projectFolderPath;
+        }
+
+        private string GetProjectName(int projectId)
+        {
+            var project = _projectRepository.Get(projectId);
+            var projectName = SanitizeFolderName(project.Name);
+            return projectName;
+        }
+
+        private string GetExportPathForProject(int projectId)
+        {
+            var datasetId = _projectRepository.GetDatasetIdByProjectId(projectId);
+            var datasetName = datasetId.HasValue
+                ? SanitizeFolderName(_dataSetRepository.GetDataSetWithProjectsAndCodeSmells(datasetId.Value).Name)
+                : "StandaloneProjects";
+
+            return $"/app/exports/{datasetName}/";
+        }
+
+        private void ExportCleanNamesAnalysis(Dictionary<string, List<Instance>> projectsAndInstances, string basePath)
         {
             if (projectsAndInstances == default) return;
 
             foreach (var projectAndInstances in projectsAndInstances)
             {
+                var projectName = SanitizeFolderName(projectAndInstances.Key);
+                var projectFolderPath = $"{basePath}{projectName}/";
+                Directory.CreateDirectory(projectFolderPath);
+
+                _exportPath = projectFolderPath;
+
                 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
                 _excelFile = new ExcelPackage(new FileInfo(_cleanNamesAnalysisTemplatePath));
                 _sheet = _excelFile.Workbook.Worksheets[0];
@@ -70,7 +141,7 @@ namespace DataSetExplorer.Core.CleanCodeAnalysis
                 RemoveFunctions(projectAndInstances.Value);
                 var instancesAndIdentifiers = GetInstancesAndIdentifiers(projectAndInstances.Value);
                 PopulateCleanNamesTemplate(projectAndInstances.Value, instancesAndIdentifiers);
-                Serialize(projectAndInstances.Key + "_CleanNames");
+                Serialize("CleanNames");
             }
         }
 
@@ -149,17 +220,23 @@ namespace DataSetExplorer.Core.CleanCodeAnalysis
             return types.GroupBy(t => t.ToString()).ToDictionary(t => t.Key, t => t.Count());
         }
 
-        private void ExportCleanFunctionsAnalysis(Dictionary<string, List<Instance>> instances)
+        private void ExportCleanFunctionsAnalysis(Dictionary<string, List<Instance>> instances, string basePath)
         {
             if (instances == default) return;
 
             foreach (var projectName in instances.Keys)
             {
+                var sanitizedProjectName = SanitizeFolderName(projectName);
+                var projectFolderPath = $"{basePath}{sanitizedProjectName}/";
+                Directory.CreateDirectory(projectFolderPath);
+
+                _exportPath = projectFolderPath;
+
                 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
                 _excelFile = new ExcelPackage(new FileInfo(_cleanFunctionsAnalysisTemplatePath));
                 _sheet = _excelFile.Workbook.Worksheets[0];
                 PopulateCleanFunctionsTemplate(instances[projectName]);
-                Serialize(projectName + "_CleanFunctions");
+                Serialize("CleanFunctions");
             }
         }
 
@@ -213,17 +290,23 @@ namespace DataSetExplorer.Core.CleanCodeAnalysis
             return instancesWithoutConstructors;
         }
 
-        private void ExportCleanClassesAnalysis(Dictionary<string, List<Instance>> instances)
+        private void ExportCleanClassesAnalysis(Dictionary<string, List<Instance>> instances, string basePath)
         {
             if (instances == default) return;
 
             foreach (var projectName in instances.Keys)
             {
+                var sanitizedProjectName = SanitizeFolderName(projectName);
+                var projectFolderPath = $"{basePath}{sanitizedProjectName}/";
+                Directory.CreateDirectory(projectFolderPath);
+
+                _exportPath = projectFolderPath;
+
                 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
                 _excelFile = new ExcelPackage(new FileInfo(_cleanClassesAnalysisTemplatePath));
                 _sheet = _excelFile.Workbook.Worksheets[0];
                 PopulateCleanClassesTemplate(instances[projectName]);
-                Serialize(projectName + "_CleanClasses");
+                Serialize("CleanClasses");
             }
         }
 
@@ -286,6 +369,35 @@ namespace DataSetExplorer.Core.CleanCodeAnalysis
         {
             var filePath = _exportPath + fileName + ".xlsx";
             _excelFile.SaveAs(new FileInfo(filePath));
+        }
+
+        private string SanitizeFolderName(string name)
+        {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var sanitized = string.Join("_", name.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
+            return sanitized.Trim();
+        }
+
+        private string GetUniqueExportPath(string basePath, string folderName)
+        {
+            var fullPath = Path.Combine(basePath, folderName);
+
+            // If folder doesn't exist, use it
+            if (!Directory.Exists(fullPath))
+            {
+                return fullPath;
+            }
+
+            // Find the next available number
+            int counter = 1;
+            string numberedPath;
+            do
+            {
+                numberedPath = Path.Combine(basePath, $"{folderName}({counter})");
+                counter++;
+            } while (Directory.Exists(numberedPath));
+
+            return numberedPath;
         }
     }
 }

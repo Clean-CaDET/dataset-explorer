@@ -98,7 +98,7 @@ namespace DataSetExplorer.UI.Controllers.Dataset
         public IActionResult ExportCleanCodeAnalysis([FromRoute] int id, [FromBody] CleanCodeAnalysisDTO analysisExportOptions)
         {
             var exportPath = _cleanCodeAnalysisService.ExportProjectAnalysis(id, analysisExportOptions).Value;
-            return Ok(new FluentResults.Result().WithSuccess("Successfully exported to " + exportPath));
+            return Ok(new FluentResults.Result().WithSuccess("Successfully exported!"));
         }
     }
 }

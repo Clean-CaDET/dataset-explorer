@@ -70,5 +70,13 @@ namespace DataSetExplorer.Core.DataSets.Repository
                 .Include(d => d.Projects).ThenInclude(p => p.CandidateInstances).ThenInclude(c => c.CodeSmell)
                 .FirstOrDefault(d => d.Id == datasetId).Projects.ToList();
         }
+
+        public int? GetDatasetIdByProjectId(int projectId)
+        {
+            return _dbContext.DataSets
+                .Where(ds => ds.Projects.Any(p => p.Id == projectId))
+                .Select(ds => ds.Id)
+                .FirstOrDefault();
+        }
     }
 }
