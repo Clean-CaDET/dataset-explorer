@@ -52,7 +52,7 @@ namespace DataSetExplorer.Core.DataSets
 
             Task.Run(() => ProcessInitialDataSetProject(basePath, project, initialDataSet.SupportedCodeSmells, smellFilters, projectBuildSettings));
             initialDataSet.AddProject(project);
-            
+
             _dataSetRepository.Update(initialDataSet);
             return Result.Ok(project);
         }
@@ -195,24 +195,102 @@ namespace DataSetExplorer.Core.DataSets
 
         private void ProcessInitialDataSetProject(string basePath, DataSetProject initialProject, List<CodeSmell> codeSmells, List<SmellFilter> smellFilters, ProjectBuildSettingsDTO projectBuildSettings)
         {
+            const int maxRetries = 10; // Maximum number of retry attempts
+            var ignoredFolders = new List<string>(projectBuildSettings.IgnoredFolders ?? new List<string>());
+            var attemptCount = 0;
+
+            while (attemptCount < maxRetries)
+            {
+                try
+                {
+                    var currentBuildSettings = new ProjectBuildSettingsDTO(ignoredFolders)
+                    {
+                        NumOfInstances = projectBuildSettings.NumOfInstances,
+                        NumOfInstancesType = projectBuildSettings.NumOfInstancesType,
+                        RandomizeClassSelection = projectBuildSettings.RandomizeClassSelection,
+                        RandomizeMemberSelection = projectBuildSettings.RandomizeMemberSelection
+                    };
+
+                    var project = CreateDataSetProject(basePath, initialProject.Name, initialProject.Url, codeSmells, smellFilters, currentBuildSettings);
+                    initialProject.CandidateInstances = project.CandidateInstances;
+                    initialProject.GraphInstances = project.GraphInstances;
+                    initialProject.Processed();
+                    _projectRepository.Update(initialProject);
+                    return; // Success!
+                }
+                catch (Exception e)
+                {
+                    // Try to extract problematic folder/namespace for automatic retry
+                    var suggestedFolderToIgnore = ExtractProblematicFolderFromError(e);
+
+                    if (!string.IsNullOrEmpty(suggestedFolderToIgnore) && !ignoredFolders.Contains(suggestedFolderToIgnore))
+                    {
+                        ignoredFolders.Add(suggestedFolderToIgnore);
+                        attemptCount++;
+                    }
+                    else
+                    {
+                        // No new folder to ignore, or already ignoring it - can't retry
+                        break;
+                    }
+                }
+            }
+
+            // If we get here, all retries failed
+            initialProject.Failed();
+            _projectRepository.Update(initialProject);
+        }
+
+        private string ExtractProblematicFolderFromError(Exception e)
+        {
             try
             {
-                var project = CreateDataSetProject(basePath, initialProject.Name, initialProject.Url, codeSmells, smellFilters, projectBuildSettings);
-                initialProject.CandidateInstances = project.CandidateInstances;
-                initialProject.GraphInstances = project.GraphInstances;
-                initialProject.Processed();
-                _projectRepository.Update(initialProject);
-            }
-            catch (Exception e) when (e is LibGit2SharpException || e is NonUniqueFullNameException)
-            {
-                // Log the error for debugging
-                Console.WriteLine($"Error processing project {initialProject.Name}: {e.Message}");
-                Console.WriteLine($"Stack trace: {e.StackTrace}");
+                // Handle "An item with the same key has already been added. Key: Namespace.ClassName"
+                // This can come from ArgumentException or NonUniqueFullNameException
+                if (e.Message.Contains("An item with the same key has already been added") && e.Message.Contains("Key:"))
+                {
+                    // Extract the key (e.g., "SecretServerInterface.SSConnectionForm")
+                    var keyStart = e.Message.IndexOf("Key: ") + 5;
+                    if (keyStart > 4)
+                    {
+                        var keyEnd = e.Message.IndexOf("\n", keyStart);
+                        var key = keyEnd > keyStart ? e.Message.Substring(keyStart, keyEnd - keyStart).Trim() : e.Message.Substring(keyStart).Trim();
 
-                // Mark project as failed
-                initialProject.Failed();
-                _projectRepository.Update(initialProject);
+                        // Extract namespace (first part before the dot)
+                        var dotIndex = key.IndexOf('.');
+                        if (dotIndex > 0)
+                        {
+                            var folder = key.Substring(0, dotIndex);
+                            return folder;
+                        }
+                    }
+                }
+
+                // Handle other common parsing errors
+                if (e.Message.Contains("namespace") || e.Message.Contains("Namespace"))
+                {
+                    // Try to extract namespace from various error messages
+                    var words = e.Message.Split(new[] { ' ', '\'', '"', ':', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var word in words)
+                    {
+                        // Check if it looks like a namespace (contains dots and starts with uppercase)
+                        if (word.Contains('.') && char.IsUpper(word[0]) && !word.Contains('/') && !word.Contains('\\'))
+                        {
+                            var dotIndex = word.IndexOf('.');
+                            if (dotIndex > 0)
+                            {
+                                return word.Substring(0, dotIndex);
+                            }
+                        }
+                    }
+                }
             }
+            catch
+            {
+                // If extraction fails, return empty - don't crash the error handling
+            }
+
+            return string.Empty;
         }
 
         private string ExportToExcel(string basePath, string projectName, NewSpreadSheetColumnModel columnModel, DataSet dataSet)
