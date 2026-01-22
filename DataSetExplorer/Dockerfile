@@ -47,6 +47,9 @@ RUN mkdir -p /app/ClonedProjects
 # Create directory for uploaded files
 RUN mkdir -p /app/uploads
 
+# Create directory for exported files
+RUN mkdir -p /app/exports
+
 # Set environment variables for ASP.NET Core
 ENV ASPNETCORE_URLS=http://+:5000
 ENV ASPNETCORE_ENVIRONMENT=Production

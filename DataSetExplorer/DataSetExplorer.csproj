@@ -18,5 +18,10 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.6" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Core\DataSetSerializer\Template\*.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
 </Project>

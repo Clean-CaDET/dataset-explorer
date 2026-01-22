@@ -81,7 +81,8 @@ namespace DataSetExplorer
                     .AllowAnyHeader();
             });
 
-            app.UseHttpsRedirection();
+            // Disable HTTPS redirection in Docker environment
+            // app.UseHttpsRedirection();
 
             app.UseRouting();
 
@@ -96,7 +97,7 @@ namespace DataSetExplorer
             string port = Environment.GetEnvironmentVariable("DATABASE_PORT") ?? "5432";
             string database = Environment.GetEnvironmentVariable("DATABASE_SCHEMA") ?? "data-set-explorer-db";
             string user = Environment.GetEnvironmentVariable("DATABASE_USERNAME") ?? "postgres";
-            string password = Environment.GetEnvironmentVariable("DATABASE_PASSWORD") ?? "simke";
+            string password = Environment.GetEnvironmentVariable("DATABASE_PASSWORD") ?? "password";
             string integratedSecurity = Environment.GetEnvironmentVariable("DATABASE_INTEGRATED_SECURITY") ?? "false";
             string pooling = Environment.GetEnvironmentVariable("DATABASE_POOLING") ?? "true";
 
