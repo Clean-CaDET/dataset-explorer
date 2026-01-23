@@ -47,5 +47,15 @@ namespace DataSetExplorer.UI.Controllers.Dataset
             if (actualClass.Count == 0) return Ok();
             return Ok(exporter.GetJSON(actualClass[0]));
         }
+
+        [HttpGet]
+        [Route("{id}/source-code")]
+        public IActionResult GetSourceCode([FromRoute] int id)
+        {
+            var result = _instanceService.GetInstanceWithAnnotations(id);
+            if (result.IsFailed) return BadRequest(new { message = result.Reasons[0].Message });
+            var sourceCode = _instanceService.GetFileFromGit(result.Value.Link);
+            return Ok(new { sourceCode = sourceCode, link = result.Value.Link });
+        }
     }
 }

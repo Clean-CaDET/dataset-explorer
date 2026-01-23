@@ -5,6 +5,11 @@ using DataSetExplorer.UI.Controllers.Dataset.DTOs;
 using FluentResults;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Text;
 
 namespace DataSetExplorer.Core.DataSets
 {
@@ -13,13 +18,15 @@ namespace DataSetExplorer.Core.DataSets
         private readonly IInstanceRepository _instanceRepository;
         private readonly IDataSetCreationService _dataSetCreationService;
         private readonly IAnnotationRepository _annotationRepository;
+        private readonly IConfiguration _configuration;
 
         public InstanceService(IInstanceRepository instanceRepository, IDataSetCreationService dataSetCreationService,
-            IAnnotationRepository annotationRepository)
+            IAnnotationRepository annotationRepository, IConfiguration configuration)
         {
             _instanceRepository = instanceRepository;
             _dataSetCreationService = dataSetCreationService;
             _annotationRepository = annotationRepository;
+            _configuration = configuration;
         }
 
         public Result<Dictionary<string, List<Instance>>> GetInstancesWithIdentifiersByDatasetId(int datasetId)
@@ -92,15 +99,87 @@ namespace DataSetExplorer.Core.DataSets
 
         public string GetFileFromGit(string url)
         {
-            string rawUrl = "https://raw.githubusercontent.com/" + url.Split("https://github.com/")[1];
-            rawUrl = rawUrl.Replace("/tree", "");
+            try
+            {
+                // Parse GitHub URL: https://github.com/{owner}/{repo}/tree/{commit-hash}/{file-path}#L{start}-L{end}
+                var urlWithoutFragment = url.Split('#')[0]; // Remove line number fragment
+                var parts = urlWithoutFragment.Split("https://github.com/");
+                if (parts.Length < 2) return "Invalid GitHub URL format";
 
-            var client = new HttpClient();
-            using HttpResponseMessage response = client.GetAsync(rawUrl).Result;
-            using HttpContent content = response.Content;
-            var data = content.ReadAsStringAsync().Result;
+                var pathParts = parts[1].Split("/tree/");
+                if (pathParts.Length < 2) return "Invalid GitHub URL format - missing /tree/";
 
-            return data;
+                var repoParts = pathParts[0].Split('/');
+                if (repoParts.Length < 2) return "Invalid GitHub URL format - missing owner/repo";
+
+                var owner = repoParts[0];
+                var repo = repoParts[1];
+
+                var commitAndPath = pathParts[1].Split(new[] { '/' }, 2);
+                if (commitAndPath.Length < 2) return "Invalid GitHub URL format - missing commit/path";
+
+                var commitHash = commitAndPath[0];
+                var filePath = commitAndPath[1];
+
+                // Try raw.githubusercontent.com first (works for public repos)
+                string rawUrl = $"https://raw.githubusercontent.com/{owner}/{repo}/{commitHash}/{filePath}";
+
+                using (var client = new HttpClient())
+                {
+                    client.Timeout = TimeSpan.FromSeconds(10);
+                    using (HttpResponseMessage response = client.GetAsync(rawUrl).Result)
+                    {
+                        if (response.IsSuccessStatusCode)
+                        {
+                            return response.Content.ReadAsStringAsync().Result;
+                        }
+                    }
+                }
+
+                // If raw URL fails (private repo), try GitHub API with authentication
+                var gitToken = _configuration.GetValue<string>("GitCredentials:Token");
+                if (!string.IsNullOrEmpty(gitToken))
+                {
+                    string apiUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{filePath}?ref={commitHash}";
+
+                    using (var client = new HttpClient())
+                    {
+                        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", gitToken);
+                        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("DataSetExplorer", "1.0"));
+                        client.Timeout = TimeSpan.FromSeconds(10);
+
+                        using (HttpResponseMessage response = client.GetAsync(apiUrl).Result)
+                        {
+                            if (response.IsSuccessStatusCode)
+                            {
+                                var jsonContent = response.Content.ReadAsStringAsync().Result;
+                                var json = JObject.Parse(jsonContent);
+
+                                // GitHub API returns base64-encoded content
+                                var base64Content = json["content"]?.ToString();
+                                if (!string.IsNullOrEmpty(base64Content))
+                                {
+                                    // Remove whitespace/newlines from base64 string
+                                    base64Content = base64Content.Replace("\n", "").Replace("\r", "");
+                                    var bytes = Convert.FromBase64String(base64Content);
+                                    return Encoding.UTF8.GetString(bytes);
+                                }
+                            }
+                            else
+                            {
+                                return $"Failed to fetch file from GitHub API. Status: {response.StatusCode}. " +
+                                       $"Ensure the repository is accessible and the commit exists.";
+                            }
+                        }
+                    }
+                }
+
+                return "Failed to fetch file from GitHub. For private repositories, ensure Git credentials are configured in .env file.";
+            }
+            catch (Exception ex)
+            {
+                return $"Error fetching file from GitHub: {ex.Message}";
+            }
         }
     }
 }
