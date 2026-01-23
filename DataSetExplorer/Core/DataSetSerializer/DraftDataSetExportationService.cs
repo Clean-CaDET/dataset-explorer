@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,9 +23,13 @@ namespace DataSetExplorer.Core.DataSetSerializer
             _annotationSchemaRepository = annotationSchemaRepository;
         }
 
-        public string Export(string exportPath, int annotatorId, DataSet dataSet)
+        public string Export(int annotatorId, DataSet dataSet)
         {
-            _exportPath = exportPath + dataSet.Name + "/";
+            var sanitizedDataSetName = SanitizeFolderName(dataSet.Name);
+            var folderName = $"Draft_{sanitizedDataSetName}";
+            _exportPath = GetUniqueExportPath("/app/exports", folderName);
+            _exportPath = EndPathWithSeparator(_exportPath);
+
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             foreach (var project in dataSet.Projects)
             {
@@ -32,6 +37,38 @@ namespace DataSetExplorer.Core.DataSetSerializer
                 PopulateSheets(annotatorId, project);
             }
             return _exportPath;
+        }
+
+        private string SanitizeFolderName(string name)
+        {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var sanitized = string.Join("_", name.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
+            return sanitized.Trim();
+        }
+
+        private string GetUniqueExportPath(string basePath, string folderName)
+        {
+            var fullPath = Path.Combine(basePath, folderName);
+            if (!Directory.Exists(fullPath)) return fullPath;
+
+            int counter = 1;
+            string numberedPath;
+            do
+            {
+                numberedPath = Path.Combine(basePath, $"{folderName}({counter})");
+                counter++;
+            } while (Directory.Exists(numberedPath));
+
+            return numberedPath;
+        }
+
+        private string EndPathWithSeparator(string folderPath)
+        {
+            if (!folderPath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                folderPath += Path.DirectorySeparatorChar;
+            }
+            return folderPath;
         }
 
         private void CreateExcelFile(DataSetProject project)

@@ -247,6 +247,11 @@ namespace DataSetExplorer.Core.DataSetSerializer
         private void Serialize(string fileName)
         {
             var filePath = _exportPath + fileName + ".xlsx";
+            var directory = Path.GetDirectoryName(filePath);
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
             _excelFile.SaveAs(new FileInfo(filePath));
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using DataSetExplorer.Core.Annotations.Model;
 using DataSetExplorer.Core.Auth;
@@ -32,14 +33,61 @@ namespace DataSetExplorer.Core.DataSetSerializer
         public Result<string> ExportDraft(DraftDataSetExportDTO dataSetDTO)
         {
             var dataSet = GetDataSetForExport(dataSetDTO.Id).Value;
-            var exportPath = _draftDataSetExportationService.Export(dataSetDTO.ExportPath, dataSetDTO.AnnotatorId, dataSet);
+            var exportPath = _draftDataSetExportationService.Export(dataSetDTO.AnnotatorId, dataSet);
             return Result.Ok(exportPath);
         }
 
         public Result<string> ExportComplete(int datasetId, CompleteDataSetExportDTO dataSetDTO)
-        { 
-            var annotationsFilesPaths = File.ReadAllLines(dataSetDTO.AnnotationsPath);
-            return this.Export(datasetId, annotationsFilesPaths, dataSetDTO.ExportPath);
+        {
+            if (dataSetDTO.DraftDatasetFiles == null || dataSetDTO.DraftDatasetFiles.Count == 0)
+                return Result.Fail("No draft dataset files were uploaded.");
+
+            // Save uploaded files temporarily and get their paths
+            var tempFolder = Path.Combine("/app/uploads", "temp_complete_export_" + Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempFolder);
+
+            var filePaths = new List<string>();
+            try
+            {
+                foreach (var file in dataSetDTO.DraftDatasetFiles)
+                {
+                    if (file == null || file.Length == 0) continue;
+
+                    if (!Path.GetExtension(file.FileName).Equals(".xlsx", StringComparison.OrdinalIgnoreCase))
+                        return Result.Fail($"File '{file.FileName}' is not a valid Excel file. Only .xlsx files are supported.");
+
+                    var tempFilePath = Path.Combine(tempFolder, file.FileName);
+                    using (var stream = new FileStream(tempFilePath, FileMode.Create))
+                    {
+                        file.CopyTo(stream);
+                    }
+                    filePaths.Add(tempFilePath);
+                }
+
+                if (filePaths.Count == 0)
+                    return Result.Fail("No valid draft dataset files were uploaded.");
+
+                // Calculate export path with Final_ prefix and incremental naming
+                var dataSet = GetDataSetForExport(datasetId).Value;
+                var sanitizedDataSetName = SanitizeFolderName(dataSet.Name);
+                var folderName = $"Final_{sanitizedDataSetName}";
+                var outputPath = GetUniqueExportPath("/app/exports", folderName);
+                outputPath = EndPathWithSeparator(outputPath);
+
+                var result = this.Export(datasetId, filePaths.ToArray(), outputPath);
+
+                // Clean up temporary files
+                Directory.Delete(tempFolder, true);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // Clean up on error
+                if (Directory.Exists(tempFolder))
+                    Directory.Delete(tempFolder, true);
+                throw;
+            }
         }
 
         private Result<DataSet> GetDataSetForExport(int id)
@@ -64,6 +112,38 @@ namespace DataSetExplorer.Core.DataSetSerializer
             {
                 return Result.Fail(e.ToString());
             }
+        }
+
+        private string SanitizeFolderName(string name)
+        {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var sanitized = string.Join("_", name.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
+            return sanitized.Trim();
+        }
+
+        private string GetUniqueExportPath(string basePath, string folderName)
+        {
+            var fullPath = Path.Combine(basePath, folderName);
+            if (!Directory.Exists(fullPath)) return fullPath;
+
+            int counter = 1;
+            string numberedPath;
+            do
+            {
+                numberedPath = Path.Combine(basePath, $"{folderName}({counter})");
+                counter++;
+            } while (Directory.Exists(numberedPath));
+
+            return numberedPath;
+        }
+
+        private string EndPathWithSeparator(string folderPath)
+        {
+            if (!folderPath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                folderPath += Path.DirectorySeparatorChar;
+            }
+            return folderPath;
         }
     }
 }

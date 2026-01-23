@@ -4,6 +4,5 @@
     {
         public int Id { get; set; }
         public int AnnotatorId { get; set; }
-        public string ExportPath { get; set; }
     }
 }

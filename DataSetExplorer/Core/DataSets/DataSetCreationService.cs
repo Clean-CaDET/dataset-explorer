@@ -216,7 +216,7 @@ namespace DataSetExplorer.Core.DataSets
                     initialProject.GraphInstances = project.GraphInstances;
                     initialProject.Processed();
                     _projectRepository.Update(initialProject);
-                    return; // Success!
+                    return;
                 }
                 catch (Exception e)
                 {
@@ -230,13 +230,11 @@ namespace DataSetExplorer.Core.DataSets
                     }
                     else
                     {
-                        // No new folder to ignore, or already ignoring it - can't retry
                         break;
                     }
                 }
             }
 
-            // If we get here, all retries failed
             initialProject.Failed();
             _projectRepository.Update(initialProject);
         }
@@ -249,19 +247,21 @@ namespace DataSetExplorer.Core.DataSets
                 // This can come from ArgumentException or NonUniqueFullNameException
                 if (e.Message.Contains("An item with the same key has already been added") && e.Message.Contains("Key:"))
                 {
-                    // Extract the key (e.g., "SecretServerInterface.SSConnectionForm")
+                    // Extract the key (e.g., "LangLang.Src.Testing.Test")
                     var keyStart = e.Message.IndexOf("Key: ") + 5;
                     if (keyStart > 4)
                     {
                         var keyEnd = e.Message.IndexOf("\n", keyStart);
                         var key = keyEnd > keyStart ? e.Message.Substring(keyStart, keyEnd - keyStart).Trim() : e.Message.Substring(keyStart).Trim();
 
-                        // Extract namespace (first part before the dot)
-                        var dotIndex = key.IndexOf('.');
-                        if (dotIndex > 0)
+                        var parts = key.Split('.');
+                        if (parts.Length >= 3)
                         {
-                            var folder = key.Substring(0, dotIndex);
-                            return folder;
+                            return parts[parts.Length - 2];
+                        }
+                        else if (parts.Length == 2)
+                        {
+                            return parts[0];
                         }
                     }
                 }

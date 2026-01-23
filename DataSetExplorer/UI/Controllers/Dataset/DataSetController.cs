@@ -56,10 +56,10 @@ namespace DataSetExplorer.UI.Controllers.Dataset
 
         [HttpPost]
         [Route("{id}/export-complete")]
-        public IActionResult ExportCompleteDataSet([FromRoute] int id, [FromBody] CompleteDataSetExportDTO dataSetDTO)
-        { 
+        public IActionResult ExportCompleteDataSet([FromRoute] int id, [FromForm] CompleteDataSetExportDTO dataSetDTO)
+        {
             var exportPath = _dataSetExportationService.ExportComplete(id, dataSetDTO);
-            return Ok(new FluentResults.Result().WithSuccess("Successfully exported to " + exportPath));
+            return Ok(new FluentResults.Result().WithSuccess("Successfully exported!"));
         }
 
         [HttpPost]
@@ -96,10 +96,17 @@ namespace DataSetExplorer.UI.Controllers.Dataset
 
         [HttpPost]
         [Route("{id}/importProjects")]
-        public IActionResult ImportProjects([FromForm] ImportProjectsDTO data, [FromRoute] int id)
+        public IActionResult ImportProjects([FromForm] IFormFile file, [FromForm] string smellFilters, [FromRoute] int id)
         {
-            var smellFilters = _mapper.Map<List<SmellFilter>>(data.SmellFilters);
-            var result = _dataSetCreationService.ImportProjectsToDataSet(id, _gitClonePath, data.File, smellFilters);
+            // Manually deserialize smellFilters JSON string from FormData
+            SmellFilterDTO[] smellFilterDTOs = null;
+            if (!string.IsNullOrEmpty(smellFilters))
+            {
+                smellFilterDTOs = JsonConvert.DeserializeObject<SmellFilterDTO[]>(smellFilters);
+            }
+
+            var mappedSmellFilters = _mapper.Map<List<SmellFilter>>(smellFilterDTOs);
+            var result = _dataSetCreationService.ImportProjectsToDataSet(id, _gitClonePath, file, mappedSmellFilters);
             if (result.IsFailed) return BadRequest(new { message = result.Reasons[0].Message });
             return Accepted(result.Value);
         }

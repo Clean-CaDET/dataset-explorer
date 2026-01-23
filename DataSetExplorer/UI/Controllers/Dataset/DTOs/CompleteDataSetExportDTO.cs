@@ -1,8 +1,10 @@
-﻿namespace DataSetExplorer.UI.Controllers.Dataset.DTOs
+﻿using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
+
+namespace DataSetExplorer.UI.Controllers.Dataset.DTOs
 {
     public class CompleteDataSetExportDTO
     {
-        public string AnnotationsPath { get; set; }
-        public string ExportPath { get; set; }
+        public List<IFormFile> DraftDatasetFiles { get; set; }
     }
 }
