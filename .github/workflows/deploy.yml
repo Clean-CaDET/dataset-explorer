@@ -1,0 +1,55 @@
+# Naziv workflow-a
+name: Deploy Backend
+
+# Definicija kada se workflow pokreće
+on:
+  push:
+    branches:
+      - master  # Izvršava se automatski kada se uradi push na master granu (promeni ako ti je main)
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # OS na kom se pokreće job (GitHub obezbeđuje virtuelnu mašinu sa Linuxom)
+
+    steps:
+      # KORAK 1: Klonira repozitorijum na GitHub Actions mašinu
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # KORAK 2: Logovanje na Docker Hub
+      # Potrebno da bismo mogli da push-ujemo Docker image
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}      # Korišćenje tajni iz GitHub Secrets
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}  # Nikad ne piši direktno u YAML!
+
+      # KORAK 3: Build i push Docker image-a za backend
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./back/back                 # Kontekst build-a (folder u kome se nalazi Dockerfile)
+          file: ./back/back/Dockerfile         # Put do Dockerfile-a
+          push: true                           # Šalje image na Docker Hub
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/weather-backend:latest  # Naziv slike na hub-u
+
+      # KORAK 4: Deploy na server preko SSH (Ulazi na tvoj server i pokreće docker-compose komande)
+      - name: Deploy on remote server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}         # IP ili domen servera
+          username: ${{ secrets.SSH_USERNAME }} # Kredencijali
+          password: ${{ secrets.SSH_PASSWORD }} # Kredencijali
+          port: ${{ secrets.SSH_PORT }}         # SSH port
+          script: |
+            # Ulazi u folder gde je docker-compose.yml
+            cd demo-app
+            
+            # Skida najnovije verzije slika
+            docker-compose pull
+
+            # Gasi stare kontejnere
+            docker-compose down
+            
+            # Podigne nove
+            docker-compose up -d
