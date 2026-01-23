@@ -44,7 +44,7 @@ namespace DataSetExplorer.UI.ConsoleApp
                     ExportDataSet();
                     break;
                 case "4":
-                    new AnnotationConsistencySubmenu(new AnnotationConsistencyService(new FullDataSetFactory())).CheckAnnotationsConsistency();
+                    new AnnotationConsistencySubmenu(new AnnotationConsistencyService(new FullDataSetFactory(), null)).CheckAnnotationsConsistency();
                     break;
                 case "x":
                     break;

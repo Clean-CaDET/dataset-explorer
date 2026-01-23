@@ -6,17 +6,29 @@ using CodeModel.CaDETModel.CodeItems;
 using DataSetExplorer.Core.DataSets.Model;
 using DataSetExplorer.Core.DataSetSerializer;
 using FluentResults;
+using Microsoft.Extensions.Configuration;
 
 namespace DataSetExplorer.Core.AnnotationConsistency
 {
     public class ManovaTest : IAnnotatorsConsistencyTester
     {
         private readonly string _manovaScriptFile = "./Core/AnnotationConsistency/scripts/manova_test.py";
-        private readonly string _pythonPath = "./Core/AnnotationConsistency/venv/Scripts/python.exe";
+        private readonly string _pythonPath;
         private string _annotatedInstancesFile;
         private string _dependentVariable;
         private string _independentVariable;
-        private readonly string _annotatedInstancesFolderPath = "D:/ccadet/annotations/sanity_check/Output/";
+        private readonly string _annotatedInstancesFolderPath;
+
+        public ManovaTest(IConfiguration configuration)
+        {
+            _pythonPath = configuration.GetValue<string>("AnnotationConsistency:PythonPath");
+            _annotatedInstancesFolderPath = configuration.GetValue<string>("AnnotationConsistency:AnnotatedInstancesFolderPath");
+
+            if (!Directory.Exists(_annotatedInstancesFolderPath))
+            {
+                Directory.CreateDirectory(_annotatedInstancesFolderPath);
+            }
+        }
 
         private delegate void PrepareTestDelegate(int id, List<Instance> instances, string codeSmell, List<CaDETMetric> metrics);
 

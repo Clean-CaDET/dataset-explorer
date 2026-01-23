@@ -6,9 +6,6 @@ out/
 # Git repositories cloned by the application
 ClonedProjects/
 
-# Database migrations (included but don't need in build context)
-Migrations/
-
 # Python virtual environments
 Core/AnnotationConsistency/venv/
 *.pyc

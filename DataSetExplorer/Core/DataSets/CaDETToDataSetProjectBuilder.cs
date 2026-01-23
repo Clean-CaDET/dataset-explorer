@@ -353,8 +353,12 @@ namespace DataSetExplorer.Core.DataSets
 
         private string GetCodeUrl(string snippetId)
         {
-            _cadetProject.CodeLinks.TryGetValue(snippetId, out var codeLink);
-            return _projectAndCommitUrl + codeLink.FileLocation + "#L" + codeLink.StartLoC + "-L" + codeLink.EndLoC;
+            if (_cadetProject.CodeLinks.TryGetValue(snippetId, out var codeLink) && codeLink != null)
+            {
+                return _projectAndCommitUrl + codeLink.FileLocation + "#L" + codeLink.StartLoC + "-L" + codeLink.EndLoC;
+            }
+            // Return base URL if code link not found (can happen for external references or parsing issues)
+            return _projectAndCommitUrl;
         }
 
         private static void ShuffleList<T>(IList<T> list)

@@ -18,14 +18,13 @@ RUN dotnet publish -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS runtime
 WORKDIR /app
 
+# Fix Debian package repository URLs
 RUN sed -i 's|deb.debian.org|archive.debian.org|g' /etc/apt/sources.list && \
     sed -i 's|security.debian.org|archive.debian.org|g' /etc/apt/sources.list && \
     echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid
 
-# Install Git, libgit2 runtime, Python 3 and pip
-# First check what libgit2 packages are available
+# Install system dependencies (Git, libgit2, Python 3, and pip)
 RUN apt-get update && \
-    apt-cache search libgit2 && \
     apt-get install -y \
         git \
         libgit2-27 \
@@ -41,22 +40,15 @@ COPY --from=build /app/publish .
 RUN cp -f /app/runtimes/debian.9-x64/native/libgit2-106a5f2.so /app/ || true && \
     chmod +x /app/libgit2-106a5f2.so || true
 
-# Create directory for cloned Git projects
-RUN mkdir -p /app/ClonedProjects
-
-# Create directory for uploaded files
-RUN mkdir -p /app/uploads
-
-# Create directory for exported files
-RUN mkdir -p /app/exports
+# Install Python dependencies for annotation consistency and community detection
+COPY Core/AnnotationConsistency/requirements.txt /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt && \
+    pip3 install --no-cache-dir networkx infomap && \
+    rm /tmp/requirements.txt
 
 # Set environment variables for ASP.NET Core
 ENV ASPNETCORE_URLS=http://+:5000
 ENV ASPNETCORE_ENVIRONMENT=Production
-
-# Set Git credentials (override these when running the container)
-ENV GIT_USER=""
-ENV GIT_TOKEN=""
 
 # Set library search path for LibGit2Sharp native library
 ENV LD_LIBRARY_PATH=/app:/app/runtimes/debian.9-x64/native:/usr/lib/x86_64-linux-gnu
