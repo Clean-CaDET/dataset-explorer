@@ -28,8 +28,8 @@ jobs:
       - name: Build and push backend image
         uses: docker/build-push-action@v5
         with:
-          context: ./back/back                 # Kontekst build-a (folder u kome se nalazi Dockerfile)
-          file: ./back/back/Dockerfile         # Put do Dockerfile-a
+          context: ./DataSetExplorer                 # Kontekst build-a (folder u kome se nalazi Dockerfile)
+          file: ./DataSetExplorer/Dockerfile         # Put do Dockerfile-a
           push: true                           # Šalje image na Docker Hub
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/weather-backend:latest  # Naziv slike na hub-u
 
@@ -43,7 +43,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}         # SSH port
           script: |
             # Ulazi u folder gde je docker-compose.yml
-            cd demo-app
+            cd dataset-explorer
             
             # Skida najnovije verzije slika
             docker-compose pull
