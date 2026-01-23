@@ -1,0 +1,108 @@
+# Production Docker Compose Configuration for Hetzner Deployment
+#
+# This configuration uses SSH key for Git authentication instead of tokens.
+# The SSH key is added to your GitHub user account and works for ALL repositories you have access to.
+#
+# Prerequisites:
+# 1. Generate SSH deploy key:
+#    ssh-keygen -t ed25519 -C "dataset-explorer" -f ./deploy_key
+#    (Press Enter when asked for passphrase - leave it empty)
+#
+# 2. Add public key to your GitHub account:
+#    - Copy contents of deploy_key.pub: cat ./deploy_key.pub
+#    - Go to GitHub → Your profile → Settings → SSH and GPG keys → New SSH key
+#    - Paste the public key and save
+#
+# 3. Create ssh_config file in this directory with the following content:
+#    Host github.com
+#        HostName github.com
+#        User git
+#        IdentityFile /root/.ssh/id_rsa
+#        StrictHostKeyChecking no
+#
+# 4. Update .env with production database credentials (no GIT_USER/GIT_TOKEN needed)
+#
+# 5. In your Excel file, use SSH URLs instead of HTTPS:
+#    HTTPS: https://github.com/owner/repo/tree/commit-hash
+#    SSH:   git@github.com:owner/repo.git/tree/commit-hash
+#
+# Usage:
+#   docker-compose -f docker-compose.prod.yml up -d --build
+#
+# Note: The deploy_key file must have proper permissions (600) on Linux:
+#   chmod 600 ./deploy_key
+
+services:
+  database:
+    image: postgres:13
+    container_name: dataset-explorer-database
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - dataset-explorer-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./DataSetExplorer
+      dockerfile: Dockerfile
+    container_name: dataset-explorer-backend
+    environment:
+      DATABASE_HOST: database
+      DATABASE_PORT: 5432
+      DATABASE_SCHEMA: ${POSTGRES_DB}
+      DATABASE_USERNAME: ${POSTGRES_USER}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      # No GIT_USER or GIT_TOKEN - using SSH key instead
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5000
+      Environment__Type: docker
+    volumes:
+      - cloned-projects:/app/ClonedProjects
+      - uploads:/app/uploads
+      - ./exports:/app/exports
+      # Mount SSH key and config for Git authentication
+      - ./deploy_key:/root/.ssh/id_rsa:ro
+      - ./ssh_config:/root/.ssh/config:ro
+    networks:
+      - dataset-explorer-network
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ${FRONTEND_PATH:-../platform-explorer-ui-web}
+      dockerfile: Dockerfile
+    container_name: dataset-explorer-frontend
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - dataset-explorer-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  dataset-explorer-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local
+  cloned-projects:
+    driver: local
+  uploads:
+    driver: local

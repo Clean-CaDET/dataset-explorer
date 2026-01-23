@@ -1,0 +1,14 @@
+# SSH Configuration for Git Operations in Docker Container
+#
+# This file configures SSH to use the mounted SSH key for GitHub authentication.
+# Copy this file to ssh_config (without .example) when deploying to production.
+#
+# Usage:
+#   cp ssh_config.example ssh_config
+
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile /root/.ssh/id_rsa
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
