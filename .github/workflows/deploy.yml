@@ -43,7 +43,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}         # SSH port
           script: |
             # Ulazi u folder gde je docker-compose.yml
-            cd dataset-explorer
+            cd app
             
             # Skida najnovije verzije slika
             docker-compose pull
