@@ -11,13 +11,25 @@ namespace DataSetExplorer.Infrastructure.RepositoryAdapters
             if (Directory.Exists(projectPath)) DeleteDirectory(projectPath);
             Directory.CreateDirectory(projectPath);
 
-            // Use native git command to avoid LibGit2Sharp permission issues on Docker volumes
+            // Determine if URL is SSH or HTTPS
             var gitUrl = url;
-            if (!string.IsNullOrEmpty(gitUser) && !string.IsNullOrEmpty(gitToken))
+            var isSsh = url.StartsWith("git@") || url.StartsWith("ssh://");
+
+            if (isSsh)
             {
-                // Insert credentials into URL if provided
-                var urlParts = url.Replace("https://", "").Replace("http://", "");
-                gitUrl = $"https://{gitUser}:{gitToken}@{urlParts}";
+                gitUrl = url;
+            }
+            else if (url.StartsWith("https://") || url.StartsWith("http://"))
+            {
+                if (!string.IsNullOrEmpty(gitUser) && !string.IsNullOrEmpty(gitToken))
+                {
+                    var urlParts = url.Replace("https://", "").Replace("http://", "");
+                    gitUrl = $"https://{gitUser}:{gitToken}@{urlParts}";
+                }
+                else
+                {
+                    gitUrl = url;
+                }
             }
 
             var processInfo = new ProcessStartInfo
