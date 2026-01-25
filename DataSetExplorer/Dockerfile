@@ -67,13 +67,15 @@ ARG SSH_CONFIG
 #COPY ssh_config /root/.ssh/config
 
 # Setup SSH for git cloning with deploy key
-RUN echo "$DEPLOY_KEY" > /root/.ssh/id_rsa && \
-    echo "$SSH_CONFIG" > /root/.ssh/config && \
+RUN printf "%b\n" "$DEPLOY_KEY" > /root/.ssh/id_rsa && \
+    printf "%b\n" "$SSH_CONFIG" > /root/.ssh/config && \
     chmod 700 /root/.ssh && \
     chmod 600 /root/.ssh/id_rsa && \
     chmod 600 /root/.ssh/config && \
     ssh-keyscan github.com >> /root/.ssh/known_hosts && \
-    chmod 644 /root/.ssh/known_hosts
+    chmod 644 /root/.ssh/known_hosts && \
+    echo "SSH setup complete. Key fingerprint:" && \
+    ssh-keygen -l -f /root/.ssh/id_rsa || echo "Warning: SSH key may be invalid"
 
 # Fix permissions - local setup
 #RUN chmod 700 /root/.ssh \

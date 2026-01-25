@@ -220,6 +220,10 @@ namespace DataSetExplorer.Core.DataSets
                 }
                 catch (Exception e)
                 {
+                    // Log the full error for debugging
+                    Console.WriteLine($"[DataSetCreation] Error processing project {initialProject.Url}: {e.Message}");
+                    Console.WriteLine($"[DataSetCreation] Stack trace: {e.StackTrace}");
+
                     // Try to extract problematic folder/namespace for automatic retry
                     var suggestedFolderToIgnore = ExtractProblematicFolderFromError(e);
 
@@ -227,9 +231,11 @@ namespace DataSetExplorer.Core.DataSets
                     {
                         ignoredFolders.Add(suggestedFolderToIgnore);
                         attemptCount++;
+                        Console.WriteLine($"[DataSetCreation] Retrying with ignored folder: {suggestedFolderToIgnore}");
                     }
                     else
                     {
+                        Console.WriteLine($"[DataSetCreation] No more retries available. Marking project as failed.");
                         break;
                     }
                 }
