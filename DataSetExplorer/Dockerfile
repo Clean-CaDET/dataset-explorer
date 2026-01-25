@@ -62,14 +62,21 @@ RUN mkdir -p /root/.ssh
 ARG DEPLOY_KEY
 ARG SSH_CONFIG
 
-# Copy SSH key and config
-COPY deploy_key /root/.ssh/id_rsa
-COPY ssh_config /root/.ssh/config
+# Copy SSH key and config - local setup
+#COPY deploy_key /root/.ssh/id_rsa
+#COPY ssh_config /root/.ssh/config
 
-# Fix permissions
+# Fix permissions - deploy setup
 RUN echo "$DEPLOY_KEY" > /root/.ssh/id_rsa \
  && echo "$SSH_CONFIG" > /root/.ssh/config \
  && chmod 700 /root/.ssh \
+ && chmod 600 /root/.ssh/id_rsa \
+ && chmod 600 /root/.ssh/config \
+ && ssh-keyscan github.com >> /root/.ssh/known_hosts \
+ && chmod 644 /root/.ssh/known_hosts
+
+# Fix permissions - local setup
+RUN chmod 700 /root/.ssh \
  && chmod 600 /root/.ssh/id_rsa \
  && chmod 600 /root/.ssh/config \
  && ssh-keyscan github.com >> /root/.ssh/known_hosts \
