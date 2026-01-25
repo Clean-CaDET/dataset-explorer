@@ -562,3 +562,5 @@ venv
 
 # Generated SQL migration files (EF generates these on demand)
 *.sql
+
+deploy_key

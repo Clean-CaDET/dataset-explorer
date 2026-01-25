@@ -56,5 +56,24 @@ ENV LD_LIBRARY_PATH=/app:/app/runtimes/debian.9-x64/native:/usr/lib/x86_64-linux
 # Expose port 5000 for HTTP
 EXPOSE 5000
 
+# Create SSH directory
+RUN mkdir -p /root/.ssh
+
+ARG DEPLOY_KEY
+ARG SSH_CONFIG
+
+# Copy SSH key and config
+COPY deploy_key /root/.ssh/id_rsa
+COPY ssh_config /root/.ssh/config
+
+# Fix permissions
+RUN echo "$DEPLOY_KEY" > /root/.ssh/id_rsa \
+ && echo "$SSH_CONFIG" > /root/.ssh/config \
+ && chmod 700 /root/.ssh \
+ && chmod 600 /root/.ssh/id_rsa \
+ && chmod 600 /root/.ssh/config \
+ && ssh-keyscan github.com >> /root/.ssh/known_hosts \
+ && chmod 644 /root/.ssh/known_hosts
+
 # Set the entry point to run the application
 ENTRYPOINT ["dotnet", "DataSetExplorer.dll"]

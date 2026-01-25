@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using LibGit2Sharp;
 
@@ -11,31 +12,21 @@ namespace DataSetExplorer.Infrastructure.RepositoryAdapters
             if (Directory.Exists(projectPath)) DeleteDirectory(projectPath);
             Directory.CreateDirectory(projectPath);
 
-            // Determine if URL is SSH or HTTPS
-            var gitUrl = url;
-            var isSsh = url.StartsWith("git@") || url.StartsWith("ssh://");
-
-            if (isSsh)
+            if (!string.IsNullOrEmpty(gitUser) && !string.IsNullOrEmpty(gitToken))
             {
-                gitUrl = url;
+                var urlParts = url.Replace("https://", "").Replace("http://", "");
+                url = $"https://{gitUser}:{gitToken}@{urlParts}";
             }
-            else if (url.StartsWith("https://") || url.StartsWith("http://"))
+            else
             {
-                if (!string.IsNullOrEmpty(gitUser) && !string.IsNullOrEmpty(gitToken))
-                {
-                    var urlParts = url.Replace("https://", "").Replace("http://", "");
-                    gitUrl = $"https://{gitUser}:{gitToken}@{urlParts}";
-                }
-                else
-                {
-                    gitUrl = url;
-                }
+                var urlParts = url.Replace("https://github.com/", "").Replace("http://github.com/", "").Replace("github.com/", "");
+                url = $"git@github.com:{urlParts}";
             }
 
             var processInfo = new ProcessStartInfo
             {
                 FileName = "git",
-                Arguments = $"clone {gitUrl} \"{projectPath}\"",
+                Arguments = $"clone {url} \"{projectPath}\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -57,7 +48,6 @@ namespace DataSetExplorer.Infrastructure.RepositoryAdapters
 
         public void CheckoutCommit(string commitHash, string projectPath)
         {
-            // Use native git command to avoid LibGit2Sharp permission issues
             var processInfo = new ProcessStartInfo
             {
                 FileName = "git",
@@ -87,7 +77,6 @@ namespace DataSetExplorer.Infrastructure.RepositoryAdapters
             var urlParts = urlWithCommitHash.Split("/tree/");
             var projectUrl = urlParts[0] + ".git";
 
-            // Always clone repository regardless of environment
             CloneRepository(projectUrl, projectPath, gitUser, gitToken);
 
             var commitHash = urlParts[1];
