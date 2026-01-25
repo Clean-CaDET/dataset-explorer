@@ -1,0 +1,7 @@
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile /root/.ssh/id_rsa
+    IdentitiesOnly yes
+    StrictHostKeyChecking accept-new
+    UserKnownHostsFile /root/.ssh/known_hosts

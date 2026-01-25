@@ -31,6 +31,9 @@ jobs:
           context: ./DataSetExplorer                 # Kontekst build-a (folder u kome se nalazi Dockerfile)
           file: ./DataSetExplorer/Dockerfile         # Put do Dockerfile-a
           push: true                           # Šalje image na Docker Hub
+          build-args: |
+            DEPLOY_KEY=${{ secrets.DEPLOY_KEY }}
+            SSH_CONFIG=${{ secrets.SSH_CONFIG }}
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/dataset-explorer-backend:latest  # Naziv slike na hub-u
 
       # KORAK 4: Deploy na server preko SSH (Ulazi na tvoj server i pokreće docker-compose komande)
