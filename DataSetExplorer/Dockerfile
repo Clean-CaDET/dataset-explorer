@@ -67,8 +67,9 @@ ARG SSH_CONFIG
 #COPY ssh_config /root/.ssh/config
 
 # Setup SSH for git cloning with deploy key
-RUN printf '%s' "$DEPLOY_KEY" > /root/.ssh/id_rsa && \
-    printf '%s' "$SSH_CONFIG" > /root/.ssh/config && \
+# Ensure secrets end with a newline
+RUN printf '%s\n' "$DEPLOY_KEY" > /root/.ssh/id_rsa && \
+    printf '%s\n' "$SSH_CONFIG" > /root/.ssh/config && \
     chmod 700 /root/.ssh && \
     chmod 600 /root/.ssh/id_rsa && \
     chmod 600 /root/.ssh/config && \
