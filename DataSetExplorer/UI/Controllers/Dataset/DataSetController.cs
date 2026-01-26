@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
 using AutoMapper;
 using DataSetExplorer.Core.Annotations.Model;
@@ -50,24 +51,83 @@ namespace DataSetExplorer.UI.Controllers.Dataset
         [Route("export-draft")]
         public IActionResult ExportDraftDataSet([FromBody] DraftDataSetExportDTO dataSetDTO)
         {
-            var exportPath = _dataSetExportationService.ExportDraft(dataSetDTO);
-            return Ok(new FluentResults.Result().WithSuccess("Successfully exported to " + exportPath));
+            var result = _dataSetExportationService.ExportDraft(dataSetDTO);
+            if (result.IsFailed) return BadRequest(new { message = result.Reasons[0].Message });
+
+            var exportPath = result.Value;
+
+            // Create ZIP file from export directory
+            var zipPath = CreateZipFromDirectory(exportPath);
+            var zipFileName = Path.GetFileName(zipPath);
+
+            // Return ZIP file for download
+            var fileBytes = System.IO.File.ReadAllBytes(zipPath);
+
+            // Clean up temporary ZIP and export directory
+            System.IO.File.Delete(zipPath);
+            Directory.Delete(exportPath, true);
+
+            return File(fileBytes, "application/zip", zipFileName);
         }
 
         [HttpPost]
         [Route("{id}/export-complete")]
         public IActionResult ExportCompleteDataSet([FromRoute] int id, [FromForm] CompleteDataSetExportDTO dataSetDTO)
         {
-            var exportPath = _dataSetExportationService.ExportComplete(id, dataSetDTO);
-            return Ok(new FluentResults.Result().WithSuccess("Successfully exported!"));
+            try
+            {
+                var result = _dataSetExportationService.ExportComplete(id, dataSetDTO);
+                if (result.IsFailed) return BadRequest(new { message = result.Reasons[0].Message });
+
+                var exportPath = result.Value;
+
+                // Create ZIP file from export directory
+                var zipPath = CreateZipFromDirectory(exportPath);
+                var zipFileName = Path.GetFileName(zipPath);
+
+                // Return ZIP file for download
+                var fileBytes = System.IO.File.ReadAllBytes(zipPath);
+
+                // Clean up temporary ZIP and export directory
+                System.IO.File.Delete(zipPath);
+                Directory.Delete(exportPath, true);
+
+                return File(fileBytes, "application/zip", zipFileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message, stackTrace = ex.StackTrace });
+            }
         }
 
         [HttpPost]
         [Route("{id}/export-clean-code-analysis")]
         public IActionResult ExportCleanCodeAnalysis([FromRoute] int id, [FromBody] CleanCodeAnalysisDTO dataSetDTO)
         {
-            var exportPath = _cleanCodeAnalysisService.ExportDatasetAnalysis(id, dataSetDTO).Value;
-            return Ok(new FluentResults.Result().WithSuccess("Successfully exported!"));
+            try
+            {
+                var result = _cleanCodeAnalysisService.ExportDatasetAnalysis(id, dataSetDTO);
+                if (result.IsFailed) return BadRequest(new { message = result.Reasons[0].Message });
+
+                var exportPath = result.Value;
+
+                // Create ZIP file from export directory
+                var zipPath = CreateZipFromDirectory(exportPath);
+                var zipFileName = Path.GetFileName(zipPath);
+
+                // Return ZIP file for download
+                var fileBytes = System.IO.File.ReadAllBytes(zipPath);
+
+                // Clean up temporary ZIP and export directory
+                System.IO.File.Delete(zipPath);
+                Directory.Delete(exportPath, true);
+
+                return File(fileBytes, "application/zip", zipFileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpPost]
@@ -143,6 +203,24 @@ namespace DataSetExplorer.UI.Controllers.Dataset
             var result = _dataSetCreationService.DeleteDataSet(id);
             if (result.IsFailed) return BadRequest(new { message = result.Reasons[0].Message });
             return Ok(result.Value);
+        }
+
+        private string CreateZipFromDirectory(string directoryPath)
+        {
+            // Create a temporary ZIP file path
+            var zipFileName = Path.GetFileName(directoryPath.TrimEnd(Path.DirectorySeparatorChar)) + ".zip";
+            var zipPath = Path.Combine(Path.GetTempPath(), zipFileName);
+
+            // Delete existing ZIP if it exists
+            if (System.IO.File.Exists(zipPath))
+            {
+                System.IO.File.Delete(zipPath);
+            }
+
+            // Create ZIP from directory
+            ZipFile.CreateFromDirectory(directoryPath, zipPath, CompressionLevel.Fastest, false);
+
+            return zipPath;
         }
     }
 }

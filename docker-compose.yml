@@ -35,7 +35,7 @@ services:
     volumes:
       - cloned-projects:/app/ClonedProjects
       - uploads:/app/uploads
-      - ${DOWNLOADS_PATH}:/app/exports
+      - ./exports:/app/exports
       - /root/.ssh:/root/.ssh:ro
     networks:
       - dataset-explorer-network

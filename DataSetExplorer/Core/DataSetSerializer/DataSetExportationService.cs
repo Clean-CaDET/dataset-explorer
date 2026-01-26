@@ -76,14 +76,13 @@ namespace DataSetExplorer.Core.DataSetSerializer
 
                 var result = this.Export(datasetId, filePaths.ToArray(), outputPath);
 
-                // Clean up temporary files
                 Directory.Delete(tempFolder, true);
 
-                return result;
+                if (result.IsFailed) return result;
+                return Result.Ok(outputPath);
             }
             catch (Exception ex)
             {
-                // Clean up on error
                 if (Directory.Exists(tempFolder))
                     Directory.Delete(tempFolder, true);
                 throw;

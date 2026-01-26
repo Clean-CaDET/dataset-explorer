@@ -39,12 +39,6 @@ namespace DataSetExplorer.Infrastructure.RepositoryAdapters
                 var output = process.StandardOutput.ReadToEnd();
                 var error = process.StandardError.ReadToEnd();
 
-                // Log output for debugging
-                Console.WriteLine($"[GitClone] Command: git clone {url}");
-                Console.WriteLine($"[GitClone] Exit code: {process.ExitCode}");
-                Console.WriteLine($"[GitClone] Output: {output}");
-                Console.WriteLine($"[GitClone] Error: {error}");
-
                 if (process.ExitCode != 0)
                 {
                     throw new System.Exception($"Git clone failed: {error}");
@@ -70,12 +64,6 @@ namespace DataSetExplorer.Infrastructure.RepositoryAdapters
                 process.WaitForExit();
                 var output = process.StandardOutput.ReadToEnd();
                 var error = process.StandardError.ReadToEnd();
-
-                // Log output for debugging
-                Console.WriteLine($"[GitCheckout] Command: git checkout {commitHash}");
-                Console.WriteLine($"[GitCheckout] Exit code: {process.ExitCode}");
-                Console.WriteLine($"[GitCheckout] Output: {output}");
-                Console.WriteLine($"[GitCheckout] Error: {error}");
 
                 if (process.ExitCode != 0)
                 {

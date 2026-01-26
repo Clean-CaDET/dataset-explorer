@@ -1,4 +1,7 @@
-﻿using AutoMapper;
+﻿using System;
+using System.IO;
+using System.IO.Compression;
+using AutoMapper;
 using DataSetExplorer.Core.CommunityDetection.Model;
 using DataSetExplorer.Core.DataSets;
 using DataSetExplorer.Core.CleanCodeAnalysis;
@@ -97,8 +100,48 @@ namespace DataSetExplorer.UI.Controllers.Dataset
         [Route("{id}/export-clean-code-analysis")]
         public IActionResult ExportCleanCodeAnalysis([FromRoute] int id, [FromBody] CleanCodeAnalysisDTO analysisExportOptions)
         {
-            var exportPath = _cleanCodeAnalysisService.ExportProjectAnalysis(id, analysisExportOptions).Value;
-            return Ok(new FluentResults.Result().WithSuccess("Successfully exported!"));
+            try
+            {
+                var result = _cleanCodeAnalysisService.ExportProjectAnalysis(id, analysisExportOptions);
+                if (result.IsFailed) return BadRequest(new { message = result.Reasons[0].Message });
+
+                var exportPath = result.Value;
+
+                // Create ZIP file from export directory
+                var zipPath = CreateZipFromDirectory(exportPath);
+                var zipFileName = Path.GetFileName(zipPath);
+
+                // Return ZIP file for download
+                var fileBytes = System.IO.File.ReadAllBytes(zipPath);
+
+                // Clean up temporary ZIP and export directory
+                System.IO.File.Delete(zipPath);
+                Directory.Delete(exportPath, true);
+
+                return File(fileBytes, "application/zip", zipFileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        private string CreateZipFromDirectory(string directoryPath)
+        {
+            // Create a temporary ZIP file path
+            var zipFileName = Path.GetFileName(directoryPath.TrimEnd(Path.DirectorySeparatorChar)) + ".zip";
+            var zipPath = Path.Combine(Path.GetTempPath(), zipFileName);
+
+            // Delete existing ZIP if it exists
+            if (System.IO.File.Exists(zipPath))
+            {
+                System.IO.File.Delete(zipPath);
+            }
+
+            // Create ZIP from directory
+            ZipFile.CreateFromDirectory(directoryPath, zipPath, CompressionLevel.Fastest, false);
+
+            return zipPath;
         }
     }
 }
